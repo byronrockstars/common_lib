@@ -1,10 +1,7 @@
-'''
-Created on Apr 25, 2026
-
-@author: sdc81
-'''
 from hub import light_matrix, motion_sensor, port, sound
 import runloop, motor, motor_pair, sys, time
+
+LARGE_MOTOR_MAX_VELOCITY = 1050
 
 # function is like a MyBlock
 def moveForward(degreesToMove):
@@ -21,6 +18,7 @@ def moveForward(degreesToMove):
     
     return
 
+
 #display message on hub and move at same time
 async def moveAndDisplayMessage(degreesToMove, messageToDisplay):
     print("In moveAndDisplayMessage function.")
@@ -29,6 +27,7 @@ async def moveAndDisplayMessage(degreesToMove, messageToDisplay):
     moveForward(degreesToMove)
     
     return
+
 
 #Returns true if the gyro yaw angle has reached the degreesToTurn value indicating that a turn has been completed.
 def turnCompleted(degreesToTurn):
@@ -87,11 +86,12 @@ async def spinTurn(degreesToTurn, velocity):
 
     return
 
+
 #TODO: test, convert timeout to seconds, and write a proportionalPivotTurn function
 async def proportionalSpinTurn(degreesToTurn, velocityMultiplier, timeout):
     print("Proportional Spin Turn")
     
-    LARGE_MOTOR_MAX_VELOCITY = 1050
+    
     motion_sensor.reset_yaw(0)
     await runloop.until(motion_sensor.stable)
 
@@ -169,6 +169,7 @@ async def __moveForwardProporational(rotations, velocity):
 
     return
 
+
 async def __moveBackwardProporational(rotations, velocity):
     print("Move Backward Proportional. Rotations = " + str(rotations) + ". Velocity = " + str(velocity))
 
@@ -195,7 +196,11 @@ async def __moveBackwardProporational(rotations, velocity):
 
     return
 
-async def moveStraightWheelRotation(stoppingRotations, velocity):
+
+#Moves straight using the gyro sensor to correct drift. 
+#Input parameters:stoppingRotations = positive value if going forward and negative if going backward
+#                velocity = In deg/sec; Large motor range = -1050 to 1050
+async def __moveStraightWheelRotation(stoppingRotations, velocity):
     print("MoveStraightWheelRotations. Stopping Rotations =  " + str(stoppingRotations) + ". Velocity = " + str(velocity))
 
     if(stoppingRotations > 0):
@@ -207,4 +212,10 @@ async def moveStraightWheelRotation(stoppingRotations, velocity):
     #motor_pair.move_tank_for_degrees(motor_pair.PAIR_1, velocity + correction, velocity - correction)
 
 
-
+#Moves straight using the gyro sensor to correct drift.
+#Input parameters:stoppingRotations = positive value if going forward and negative if going backward
+#                velocityPercentage = -100 to +100. Negative valu
+async def moveStraightWheelRotation(stoppingRotations, velocityPercentage):
+    print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage))
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    await __moveStraightWheelRotation(stoppingRotations, int(velocity))

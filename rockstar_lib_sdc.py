@@ -219,3 +219,26 @@ async def moveStraightWheelRotation(stoppingRotations, velocityPercentage):
     print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage))
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
     await __moveStraightWheelRotation(stoppingRotations, int(velocity))
+
+
+# Gyro reset 
+async def __gyroReset():
+    print("Resetting Gyro")
+    
+    motion_sensor.reset_yaw(0)
+    await motion_sensor.stable()
+    return
+ 
+# Sensor reset
+async def allSensorReset():
+    __gyroReset()
+    
+    # can display values from other sensors     
+    print("Stopping sound")
+    await sound.stop()    
+    
+    print("Clearing lights")
+    await light_matrix.clear()
+    
+    return
+    

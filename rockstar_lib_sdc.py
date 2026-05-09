@@ -223,22 +223,22 @@ async def moveStraightWheelRotation(stoppingRotations, velocityPercentage):
 
 # Gyro reset 
 async def __gyroReset():
-    print("Resetting Gyro")
-    
     motion_sensor.reset_yaw(0)
     await motion_sensor.stable()
     return
  
 # Sensor reset
 async def allSensorReset():
+    print("Sensor check/reset start---")
+    print("\tResetting Gyro...")
     __gyroReset()
     
     # can display values from other sensors     
-    print("Stopping sound")
+    print("\tStopping sound...")
     await sound.stop()    
     
-    print("Clearing lights")
+    print("\tClearing lights...")
     await light_matrix.clear()
-    
+    print("Sensor check/reset complete---")
     return
     

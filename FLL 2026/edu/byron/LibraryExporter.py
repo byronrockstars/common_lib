@@ -1,6 +1,6 @@
 import sys, os
 
-LIBRARY_NAME = 'rockstarlib.py'
+LIBRARY_NAME = 'rockstar_lib.py'
 
 libCode: str = """
 from hub import light_matrix, motion_sensor, port, sound

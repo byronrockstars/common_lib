@@ -66,4 +66,3 @@ def moveBackwardWheelRotation(stoppingRotations, velocityPercentage = DEFAULT_VE
 def resetEverything():
     RL.allSensorReset()
     return
-

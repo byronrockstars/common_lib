@@ -7,6 +7,8 @@ from hub import light_matrix, motion_sensor, port, sound
 import runloop, motor, motor_pair, sys, time
 
 LARGE_MOTOR_MAX_VELOCITY = 1050
+LEFT_WHEEL_PORT = port.A
+RIGHT_WHEEL_PORT = port.E
 
 #Returns true if the gyro yaw angle has reached the degreesToTurn value indicating that a turn has been completed.
 def turnCompleted(degreesToTurn):
@@ -90,86 +92,85 @@ async def checkTimer(timeout):
 
     return
 
-#TODO: consider if deceleration is possible
-async def __moveForwardProporational(rotations, velocity):
-    print("Move Forward Proportional. Rotations = " + str(rotations) + ". Velocity = " + str(velocity))
+async def __moveForwardProporational(rotations, velocity, brakeStartPercentage):
+    print("Move Forward Proportional. Rotations = " + str(rotations) + ", Velocity = " + str(velocity) + ", Brake = " + str(brakeStartPercentage))
 
     #this value will be different for each robot
-    CORRECTION_MULTIPLIER = -2.5
+    CORRECTION_MULTIPLIER = -1.5
 
     motion_sensor.reset_yaw(0)
     await runloop.until(motion_sensor.stable)
 
     degrees = rotations * 360
-    motor.reset_relative_position(port.B, 0) #using port E as its relative position is positive while moving forward on test robot
+    motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot
+    brakeStartDistance = degrees * brakeStartPercentage
+    endSpeed = LARGE_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
 
-    while (motor.relative_position(port.B) < degrees):
-        error = motion_sensor.tilt_angles()[0] * -0.1#gyro reading should be 0 if robot is moving straight
+    while (motor.relative_position(RIGHT_WHEEL_PORT) < degrees):
+        error = motion_sensor.tilt_angles()[0] * -0.1 #gyro reading should be 0 if robot is moving straight
         correction = int(error * CORRECTION_MULTIPLIER)
-        #print("Relative position = " + str(motor.relative_position(port.B)))
         #print("Correction = " + str(correction))
 
-        #motor_pair.move(motor_pair.PAIR_1, correction, velocity=velocity)
-        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction, velocity - correction, acceleration=500)
+        deceleration = 0
+        degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
 
-        #this won't work because it will run for the number of degrees without reading the gyro
-        #motor_pair.move_tank_for_degrees(motor_pair.PAIR_1, degrees, left_velocity=velocity + correction, right_velocity=velocity - correction)
+        if(degreesTraveled > brakeStartDistance):
+            deceleration = min(velocity * degreesTraveled/degrees, velocity - endSpeed)
+
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction - int(deceleration), velocity - correction - int(deceleration), acceleration=500)
 
     motor_pair.stop(motor_pair.PAIR_1)
-    print("Final relative position = " + str(motor.relative_position(port.B)))
-
+    print("Final relative position = " + str(motor.relative_position(RIGHT_WHEEL_PORT)))
     return
 
 
-async def __moveBackwardProporational(rotations, velocity):
-    print("Move Backward Proportional. Rotations = " + str(rotations) + ". Velocity = " + str(velocity))
+async def __moveBackwardProporational(rotations, velocity, brakeStartPercentage):
+    print("Move Backward Proportional. Rotations = " + str(rotations) + ". Velocity = " + str(velocity) + ", Brake = " + str(brakeStartPercentage))
 
     #this value will be different for each robot
-    CORRECTION_MULTIPLIER = -2.5
+    CORRECTION_MULTIPLIER = -3.5
 
     motion_sensor.reset_yaw(0)
     await runloop.until(motion_sensor.stable)
 
     degrees = rotations * 360
-    motor.reset_relative_position(port.B, 0) #using port E as its relative position is positive while moving forward on test robot
+    motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot
+    brakeStartDistance = degrees * brakeStartPercentage
+    endSpeed = LARGE_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
 
-    while (motor.relative_position(port.B) > degrees):
-        error = motion_sensor.tilt_angles()[0] * -0.1#gyro reading should be 0 if robot is moving straight
+    while (motor.relative_position(RIGHT_WHEEL_PORT) > degrees):
+        error = motion_sensor.tilt_angles()[0] * -0.1 #gyro reading should be 0 if robot is moving straight
         correction = int(error * CORRECTION_MULTIPLIER)
-        #print("Relative position = " + str(motor.relative_position(port.B)))
         #print("Correction = " + str(correction))
 
-        #motor_pair.move(motor_pair.PAIR_1, correction, velocity=velocity)
-        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction, velocity - correction, acceleration=500)
+        deceleration = 0
+        degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
+
+        if(degreesTraveled < brakeStartDistance):
+            deceleration = max(velocity * degreesTraveled/degrees, velocity + endSpeed)#deceleration is negative when moving backwards
+        #print("Deceleration = ", deceleration)
+        #print("Speed = ", velocity + correction - int(deceleration))
+
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction - int(deceleration), velocity - correction - int(deceleration), acceleration=500)
 
     motor_pair.stop(motor_pair.PAIR_1)
-    print("Final relative position = " + str(motor.relative_position(port.B)))
+    print("Final relative position = " + str(motor.relative_position(RIGHT_WHEEL_PORT)))
 
     return
-
-
-#Moves straight using the gyro sensor to correct drift.
-#Input parameters:stoppingRotations = positive value if going forward and negative if going backward
-#                velocity = In deg/sec; Large motor range = -1050 to 1050
-async def __moveStraightWheelRotation(stoppingRotations, velocity):
-    print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity = " + str(velocity))
-
-    if(stoppingRotations > 0):
-        await __moveForwardProporational(stoppingRotations, velocity)
-    else:
-        await __moveBackwardProporational(stoppingRotations, velocity * -1)
-
-    #motor_pair.move_for_degrees(motor_pair.PAIR_1, degreesToMove, 0, velocity=263, stop=motor.BRAKE, acceleration=500, deceleration=1000)
-    #motor_pair.move_tank_for_degrees(motor_pair.PAIR_1, velocity + correction, velocity - correction)
 
 
 #Moves straight using the gyro sensor to correct drift.
 #Input parameters:stoppingRotations = positive value if going forward and negative if going backward
 #                velocityPercentage = 0 to +100.
-async def moveStraightWheelRotation(stoppingRotations, velocityPercentage):
+#                brakeStartValue (optional): Decimal percentage of the driven distance after which the robot starts braking.
+async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, brakeStartValue = 0.9):
     print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage))
     velocity = LARGE_MOTOR_MAX_VELOCITY * abs(velocityPercentage)/100#negative values for velocity are not allowed so take absolute value
-    await __moveStraightWheelRotation(stoppingRotations, int(velocity))
+
+    if(stoppingRotations > 0):
+        await __moveForwardProporational(stoppingRotations, int(velocity), brakeStartValue)
+    else:
+        await __moveBackwardProporational(stoppingRotations, int(velocity * -1), brakeStartValue)
 """
 
 
@@ -198,8 +199,6 @@ def exportLibrary():
 
 #TODO: add error handling for file open/close issues
 def readLibrary():
-    os.chdir('/flash') #change directory to root
-
     libFile = open(LIBRARY_NAME, 'r')
     contents = libFile.read()
     print(contents)
@@ -211,6 +210,7 @@ def deleteLibrary():
         os.remove(LIBRARY_NAME) #remove any existing custom library with the same name
     except:
         pass
+
 
 def readDirectory():
     print("Directory contents: ")

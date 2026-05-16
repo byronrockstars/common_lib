@@ -32,7 +32,7 @@ async def moveAndDisplayMessage(degreesToMove, messageToDisplay):
 
 
 #Returns true if the gyro yaw angle has reached the degreesToTurn value indicating that a turn has been completed.
-def turnCompleted(degreesToTurn):
+def __turnCompleted(degreesToTurn):
     #multiplying by -0.1 makes yaw angle match values in hub
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
@@ -54,7 +54,7 @@ async def pivotTurn(degreesToTurn, velocity):
         #motor_pair.move(motor_pair.PAIR_1, -50, velocity=velocity) #alternative way to pivot turn left
         
     #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
-    await runloop.until(lambda: turnCompleted(degreesToTurn))
+    await runloop.until(lambda: __turnCompleted(degreesToTurn))
     motor_pair.stop(motor_pair.PAIR_1)
 
     #multiplying by -0.1 makes yaw angle match values in hub
@@ -80,7 +80,7 @@ async def spinTurn(degreesToTurn, velocity):
         #motor_pair.move(motor_pair.PAIR_1, -100, velocity=velocity) #alternative way to spin turn left
 
     #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
-    await runloop.until(lambda: turnCompleted(degreesToTurn))
+    await runloop.until(lambda: __turnCompleted(degreesToTurn))
     motor_pair.stop(motor_pair.PAIR_1)
 
     #multiplying by -0.1 makes yaw angle match values in hub
@@ -89,32 +89,35 @@ async def spinTurn(degreesToTurn, velocity):
     return
 
 
-#TODO: test, convert timeout to seconds, and write a proportionalPivotTurn function
-async def proportionalSpinTurn(degreesToTurn, velocityMultiplier, timeout):
-    print("Proportional Spin Turn")
-    
-    
+#Complete a spin turn and slow down as the turn completes to ensure accuracy.
+#Input parameters: degreesToTurn = positive value if turning to right and negative if turning to left (-180 to 180)
+#                velocityPercentage (optional) = how fast to complete the turn in percentage (1 to 100)
+#                timeout (optional) = maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached.
+async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout = 2):
+    print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
+
     motion_sensor.reset_yaw(0)
     await runloop.until(motion_sensor.stable)
 
     startTime = time.ticks_ms()
     print("Start time: ", startTime)
 
-    while (time.ticks_diff(time.ticks_ms(), startTime) < timeout):
-        
+    #convert timeout (in seconds) to milliseconds and compare to amount of time that has gone by
+    while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
+
         if(degreesToTurn > 0):
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
-        turnPower = turnError * velocityMultiplier * LARGE_MOTOR_MAX_VELOCITY/50
+        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/50
 
         if(degreesToTurn > 0):
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1* int(turnPower)) #right turn
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, -1*int(turnPower), int(turnPower)) #left turn
 
-        if(turnCompleted(degreesToTurn)):
+        if(__turnCompleted(degreesToTurn)):
             print("Turn completed!")
             break
 
@@ -127,17 +130,43 @@ async def proportionalSpinTurn(degreesToTurn, velocityMultiplier, timeout):
     return
 
 
-async def checkTimer(timeout):
-    startTime = time.ticks_ms()
+#Complete a pivot turn and slow down as the turn completes to ensure accuracy. 
+#Input parameters: degreesToTurn = positive value if turning to right and negative if turning to left (-180 to 180)
+#                  velocityPercentage (optional) = how fast to complete the turn in percentage (1 to 100) 
+#                  timeout (optional) = maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached. 
+async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout = 2):
+    print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
+    motion_sensor.reset_yaw(0)
+    await runloop.until(motion_sensor.stable)
+
+    startTime = time.ticks_ms()
     print("Start time: ", startTime)
 
-    while time.ticks_diff(time.ticks_ms(), startTime) < timeout:
-        continue
-        #print("Time is: ", time.ticks_ms())
-        #await runloop.sleep_ms(100)
+    #convert timeout (in seconds) to milliseconds and compare to amount of time that has gone by
+    while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
 
-    print("Time is up!")
+        if(degreesToTurn > 0):
+            turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
+        else:
+            turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
+
+        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/40  #pivot turns are slower so take a larger percentage of the max velocity 
+
+        if(degreesToTurn > 0):
+            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0) #right turn
+        else:
+            motor_pair.move_tank(motor_pair.PAIR_1, 0, int(turnPower)) #left turn
+
+        if(__turnCompleted(degreesToTurn)):
+            print("Turn completed!")
+            break
+
+    print("Time out!")
+    motor_pair.stop(motor_pair.PAIR_1)
+
+    #multiplying by -0.1 makes yaw angle match values in hub
+    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
 
     return
 

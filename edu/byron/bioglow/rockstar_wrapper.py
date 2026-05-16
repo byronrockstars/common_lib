@@ -9,14 +9,12 @@ DEFAULT_VELOCITY = 50 #percentage
 DEFAULT_TIMEOUT = 60 #seconds
 
 # function is like a MyBlock
-def moveBackward(degreesToMove):
-    print("In moveBackward function, degrees to move = " +  str(degreesToMove))
-    
-    RL.moveForward(-1 * degreesToMove)
+def moveBackward(rotations):
+    RL.moveForward(-360 * rotations)
     return
 
-def moveForward(degreesToMove):
-    RL.moveForward(degreesToMove)
+def moveForward(rotations):
+    RL.moveForward(360 * rotations)
     return
 
 async def displayMessage(messageToDisplay):
@@ -46,20 +44,12 @@ def proportionalSpinTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout
 def proportionalSpinTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout = DEFAULT_TIMEOUT):
     RL.proportionalSpinTurn(degreesToTurn, velocity, timeout * 1000)
     return
-    
-def moveForwardProporational(rotations, velocity = DEFAULT_VELOCITY):
-    RL.__moveForwardProporational(rotations, velocity)
-    return
-    
-def moveBackwardProporational(rotations, velocity = DEFAULT_VELOCITY):
-    RL.__moveForwardProporational(-1 * rotations, velocity)
-    return
 
-def moveForwardWheelRotation(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
+def moveForwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
     RL.moveStraightWheelRotation(stoppingRotations, velocityPercentage)
     return
     
-def moveBackwardWheelRotation(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
+def moveBackwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
     RL.moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage)
     return
     

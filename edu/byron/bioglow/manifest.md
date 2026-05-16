@@ -14,13 +14,9 @@ RW.moveBackward(degreesToMove)
 
 RW.moveForward(degreesToMove)
 
-RW.moveForwardProporational(rotations, velocity = DEFAULT_VELOCITY)
+RW.moveForwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
     
-RW.moveBackwardProporational(rotations, velocity = DEFAULT_VELOCITY)
-
-RW.moveForwardWheelRotation(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
-    
-RW.moveBackwardWheelRotation(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
+RW.moveBackwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
 
 
 ## TURN

@@ -1,36 +1,36 @@
 ## INITIALIZE
 
-RW.resetEverything()
+RW.initializeRobot(name, mainPortLeft, mainPortRight)
+
+RW.resetEverything(myConfig)
 
 
 ## DISPLAY
 
-RW.displayMessage(messageToDisplay)
+RW.displayMessage(myConfig, messageToDisplay)
 
 
 ## MOVEMENT
 
-RW.moveBackward(degreesToMove)
+RW.moveBackward(myConfig, rotations)
 
-RW.moveForward(degreesToMove)
+RW.moveForward(myConfig, rotations)
 
-RW.moveForwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
-    
-RW.moveBackwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY)    
+RW.moveForwardGyro(myConfig, stoppingRotations)
+
+RW.moveBackwardGyro(myConfig, stoppingRotations)
 
 
 ## TURN
 
-RW.pivotTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY)
+RW.pivotTurnRight(myConfig, degreesToTurn)
 
-RW.pivotTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY)
+RW.pivotTurnLeft(myConfig, degreesToTurn)
 
-RW.spinTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY)
-    
-RW.spinTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY)
-        
-RW.proportionalSpinTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout = DEFAULT_TIMEOUT)
+RW.spinTurnRight(myConfig, degreesToTurn)
 
-RW.proportionalSpinTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout = DEFAULT_TIMEOUT)
-    
-    
+RW.spinTurnLeft(myConfig, degreesToTurn)
+
+RW.proportionalSpinTurnLeft(myConfig, degreesToTurn)
+
+RW.proportionalSpinTurnRight(myConfig, degreesToTurn)

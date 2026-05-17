@@ -1,58 +1,116 @@
 from hub import light_matrix, motion_sensor, port, sound
 import runloop, motor, motor_pair, sys, time
 import rockstar_lib as RL
+from myClasses import RobotConfig
 
-LARGE_MOTOR_MAX_VELOCITY = 1050
-MEDIUM_MOTOR_MAX_VELOCITY = 1110
-
-DEFAULT_VELOCITY = 50 #percentage
-DEFAULT_TIMEOUT = 60 #seconds
-
-# function is like a MyBlock
-def moveBackward(rotations):
-    RL.moveForward(-360 * rotations)
+def moveBackward(myConfig:RobotConfig, rotations):
+    if(isinstance(rotations, (int, float))):
+        RL.moveForward(myConfig, -360 * rotations)
+    else:
+        print("moveBackward: rotations must be a number")
     return
 
-def moveForward(rotations):
-    RL.moveForward(360 * rotations)
+def moveForward(myConfig:RobotConfig, rotations):
+    if(isinstance(rotations, (int, float))):
+        RL.moveForward(myConfig, 360 * rotations)
+    else:
+        print("moveForward: rotations must be a number")    
     return
 
-async def displayMessage(messageToDisplay):
-    light_matrix.write(str(messageToDisplay))  #await keyword waits for message to complete before continuing on    
+async def displayMessage(myConfig:RobotConfig, messageToDisplay):
+    light_matrix.write(str(messageToDisplay)) 
     return
 
-def pivotTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY):
-    RL.pivotTurn(degreesToTurn, (LARGE_MOTOR_MAX_VELOCITY * velocity)//100)
+def pivotTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        RL.pivotTurn(myConfig, degreesToTurn)
+    else:
+        print("pivotTurnRight: degreesToTurn must be a number")    
     return
 
-def pivotTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY):
-    RL.pivotTurn(-1 * degreesToTurn, (LARGE_MOTOR_MAX_VELOCITY * velocity)//100)
+def pivotTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        RL.pivotTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("pivotTurnLeft: degreesToTurn must be a number")        
     return
 
-def spinTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY):
-    RL.spinTurn(degreesToTurn, (LARGE_MOTOR_MAX_VELOCITY * velocity)//100)
+def spinTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        RL.spinTurn(myConfig, degreesToTurn)
+    else:
+        print("spinTurnRight: degreesToTurn must be a number")                
     return
     
-def spinTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY):
-    RL.spinTurn(-1 * degreesToTurn, (LARGE_MOTOR_MAX_VELOCITY * velocity)//100)
+def spinTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        RL.spinTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("spinTurnLeft: degreesToTurn must be a number")                    
     return
     
-def proportionalSpinTurnLeft(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout = DEFAULT_TIMEOUT):
-    RL.proportionalSpinTurn(-1 * degreesToTurn, velocity, timeout * 1000)
+def proportionalSpinTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        RL.proportionalSpinTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("proportionalSpinTurnLeft: degreesToTurn must be a number")                        
     return
 
-def proportionalSpinTurnRight(degreesToTurn, velocity = DEFAULT_VELOCITY, timeout = DEFAULT_TIMEOUT):
-    RL.proportionalSpinTurn(degreesToTurn, velocity, timeout * 1000)
+def proportionalSpinTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        RL.proportionalSpinTurn(myConfig, degreesToTurn)
+    else:
+        print("proportionalSpinTurnRight: degreesToTurn must be a number")                            
     return
 
-def moveForwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
-    RL.moveStraightWheelRotation(stoppingRotations, velocityPercentage)
+def moveForwardGyro(myConfig:RobotConfig, stoppingRotations):    
+    if(isinstance(stoppingRotations, int)):        
+        RL.moveStraightWheelRotation(myConfig, stoppingRotations)
+    else:
+        print("moveForwardGyro: stoppingRotations must be a number")                                
     return
     
-def moveBackwardGyro(stoppingRotations, velocityPercentage = DEFAULT_VELOCITY):    
-    RL.moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage)
+def moveBackwardGyro(myConfig:RobotConfig, stoppingRotations):    
+    if(isinstance(stoppingRotations, int)):
+        RL.moveStraightWheelRotation(myConfig, -1 * stoppingRotations)
+    else:
+        print("moveBackwardGyro: stoppingRotations must be a number")                                    
     return
     
-def resetEverything():
+def resetEverything(myConfig:RobotConfig):
     RL.allSensorReset()
+    
+    newConfig = RobotConfig(myConfig.name,  
+        mainPortLeft = myConfig.mainPortLeft,
+        mainPortRight = myConfig.mainPortRight,
+    )
+    
+    myConfig.changeMainMotorVelocity(newConfig.getMainMotorVelocity())
+    myConfig.changeAttachMotorVelocity(newConfig.getAttachMotorVelocity())
+    myConfig.changeTimeout(newConfig.getTimeout())
+    
+    print("resetEverything: Complete")
+        
     return
+    
+def initializeRobot(name: str,
+        mainPortLeft,
+        mainPortRight
+        ) -> RobotConfig:
+    
+    #config   
+    newConfig = RobotConfig(name = name,  
+        mainPortLeft = mainPortLeft,
+        mainPortRight = mainPortRight,        
+    )
+    
+    #sensors
+    RL.allSensorReset()
+    
+    #motors
+    motor_pair.pair(motor_pair.PAIR_1, newConfig.mainPortLeft, newConfig.mainPortRight)
+     
+    print("initializeRobot: Complete")
+        
+    return newConfig
+    

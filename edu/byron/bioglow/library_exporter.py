@@ -1,6 +1,7 @@
 import sys, os
 
-LIBRARY_NAME = 'rockstar_lib.py'
+libraryFile = 'rockstar_lib.py'
+classesFile = "rockstar_classes.py"
 
 libCode: str = """
 from hub import light_matrix, motion_sensor, port, sound
@@ -206,40 +207,124 @@ async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, brake
 """
 
 
-libCode2: str = """
-from hub import light_matrix, motion_sensor, port, sound
-import runloop, motor, motor_pair, sys, time
+classesCode: str = """
+class RobotConfig:
+    LARGE_MOTOR_MAX_VELOCITY = 1050
+    MEDIUM_MOTOR_MAX_VELOCITY = 1110
 
-async def moveForward(degreesToMove):
-    print("In moveForward function, degrees to move = ", degreesToMove)
-    await motor_pair.move_for_degrees(motor_pair.PAIR_1, degreesToMove, 0, velocity=263, stop=motor.BRAKE, acceleration=500, deceleration=1000)
-    print("After pair.")
-    return
+    DEFAULT_VELOCITY_PERCENT = 25 #percentage
+    DEFAULT_TIMEOUT_SEC = 2 #seconds
+
+    def __init__(
+        self,
+        name: str,
+        mainPortLeft,
+        mainPortRight,
+        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        timeout: int = DEFAULT_TIMEOUT_SEC,
+    ):
+        self.name = name
+
+        self.changeMainPorts(mainPortLeft, mainPortRight)
+        self.mainMotorVelocity = mainMotorVelocity
+        self.changeMainMotorVelocity(mainMotorVelocity)
+        self.attachMotorVelocity = attachMotorVelocity
+        self.changeAttachMotorVelocity(attachMotorVelocity)
+        self.changeTimeout(timeout)
+
+        self.showMyRobotConfig()
+
+        return
+
+    def showMyRobotConfig(self) -> None:
+        print("Motor Config for: ", self.name)
+
+        print("mainPortLeft: ", self.mainPortLeft)
+        print("mainPortRight: ", self.mainPortRight)
+        print("mainMotorVelocity: ", self.mainMotorVelocity)
+        print("attachMotorVelocity: ", self.attachMotorVelocity)
+        print("timeout: ", self.timeout)
+
+        return
+
+    def changeMainPorts(self, portLeft, portRight) -> None:
+        self.mainPortLeft = portLeft
+        self.mainPortRight = portRight
+        print("changeMainPorts: ports changed to: ", portLeft, ", ", portRight)
+        return
+
+    def changeMainMotorVelocity(self, velocityPercent: int) -> None:
+        if (10 <= velocityPercent <= 90):
+            self.mainMotorVelocity = self.LARGE_MOTOR_MAX_VELOCITY * velocityPercent/100
+            print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
+        else:
+            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
+        return
+    
+    def getMainMotorVelocity(self) -> int:
+        return self.mainMotorVelocity
+
+    def changeAttachMotorVelocity(self, velocityPercent: int) -> None:
+        if (10 <= velocityPercent <= 90):
+            self.attachMotorVelocity = self.MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent/100
+            print("setAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
+        else:
+            print("setAttachMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
+        return
+
+    def getAttachMotorVelocity(self) -> int:
+        return self.attachMotorVelocity
+
+    def changeTimeout(self, timeout: int) -> None:
+        self.timeout = timeout
+        print("changeTimeout: timeout updated to ", timeout, " seconds")
+
+    def getTimeout(self) -> int:
+        return self.timeout
 """
 
 def exportLibrary():
     global libCode
+    global libraryFile
+    global classesFile
 
     deleteLibrary()
 
-    libFile = open(LIBRARY_NAME, 'w+')
+    libFile = open(libraryFile, 'w+')
     libFile.write(libCode)
     libFile.close()
-
     print("Export of library complete.")
+
+    classesConfigFile = open(classesFile, 'w+')
+    classesConfigFile.write(classesCode)
+    classesConfigFile.close()
+    print("Export of classes complete.")
 
 
 #TODO: add error handling for file open/close issues
 def readLibrary():
-    libFile = open(LIBRARY_NAME, 'r')
-    contents = libFile.read()
+    #libFile = open(libraryFile, 'r')
+    #contents = libFile.read()
+    #print(contents)
+    #libFile.close()
+
+    print("\n\n")
+
+    classesConfigFile = open(classesFile, 'r')
+    contents = classesConfigFile.read()
     print(contents)
-    libFile.close()
-    
+    classesConfigFile.close()
+
 
 def deleteLibrary():
     try:
-        os.remove(LIBRARY_NAME) #remove any existing custom library with the same name
+        os.remove(libraryFile) #remove any existing custom library with the same name
+    except:
+        pass
+
+    try:
+        os.remove(classesFile) #remove any existing classes file with the same name
     except:
         pass
 
@@ -247,17 +332,14 @@ def deleteLibrary():
 def readDirectory():
     print("Directory contents: ")
     dirContents = os.listdir('/flash')
-    print(dirContents)    
+    print(dirContents)
 
 
-os.chdir('/flash') #change directory to root    
+os.chdir('/flash') #change directory to root
 #readDirectory()
 #deleteLibrary()
 #readDirectory()
 exportLibrary()
 readLibrary()
+readDirectory()
 sys.exit(0)
-
-    
-
-

@@ -1,8 +1,10 @@
 from hub import light_matrix, motion_sensor, port, sound
 import hub
-import runloop, motor, motor_pair, sys, time
+import runloop, motor, motor_pair, sys, time, color_sensor, color
 
 LARGE_MOTOR_MAX_VELOCITY = 1050
+BLACK_LINE_LIGHT_REFLECTION = 50
+WHITE_LINE_LIGHT_REFLECTION = 95
 LEFT_WHEEL_PORT = port.A
 RIGHT_WHEEL_PORT = port.E
 
@@ -240,3 +242,65 @@ async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, accel
         await __moveBackwardProporational(stoppingRotations, int(velocity * -1), acceleration, brakeStartValue, correctionMultiplier)
     
     return
+
+
+def __blackLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+    #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
+    #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
+    
+    #alternate way to determine black line but may not work as consistently as light reflection
+    #color_sensor.color(leftLightSensorPort) == color.BLACK or color_sensor.color(rightLightSensorPort) == color.BLACK
+    
+    return (color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+
+
+def __whiteLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+    #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
+    #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
+    
+    #color_sensor.color(leftLightSensorPort) == color.WHITE or color_sensor.color(rightLightSensorPort) == color.WHITE
+    return (color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+
+
+#Moves straight ahead until one of the two light sensors finds the line with the inputted line color.
+#Input parameters:  leftLightSensorPort: port number of left light sensor (ex port.B)
+#                   rightLightSensorPort: port number of right light sensor (ex. port.D)
+#                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
+#                   velocityPercentage (optional): how fast (-100% to 100%) to move in a straight line. Negative values move backwards.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+#Note: ideal height of light sensor off of ground is 16mm (2 Lego blocks)
+async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> int:
+    print("In moveStraightUntilBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 
+            str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)  + ", acceleration = " + str(acceleration) + ".")
+
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    motor_pair.move(motor_pair.PAIR_1, 0, velocity=int(velocity), acceleration=acceleration)  
+
+    triggeredSensorPort = -1
+
+    if(lineColor == color.BLACK):
+        #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
+        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort))
+
+        if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
+            print("Left light sensor found black line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+            triggeredSensorPort = leftLightSensorPort
+        else:
+            print("Right light sensor found black line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+            triggeredSensorPort = rightLightSensorPort
+    elif(lineColor == color.WHITE):
+        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort))
+
+        if(color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
+            print("Left light sensor found white line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+            triggeredSensorPort = leftLightSensorPort
+        else:
+            print("Right light sensor found white line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+            triggeredSensorPort = rightLightSensorPort
+    else:
+        print("Line color of " + str(lineColor) + " is invalid.")
+
+    # stop and exit
+    motor_pair.stop(motor_pair.PAIR_1)
+    return triggeredSensorPort
+

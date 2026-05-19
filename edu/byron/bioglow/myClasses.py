@@ -1,6 +1,3 @@
-from hub import light_matrix, motion_sensor, port, sound
-import runloop, motor, motor_pair, sys, time
-
 class RobotConfig:
     LARGE_MOTOR_MAX_VELOCITY = 1050
     MEDIUM_MOTOR_MAX_VELOCITY = 1110
@@ -13,22 +10,25 @@ class RobotConfig:
         name: str,
         mainPortLeft,
         mainPortRight,        
-        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT,
-        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT,
+        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
         timeout: int = DEFAULT_TIMEOUT_SEC,
     ):
         self.name = name
         
-        changeMainPorts(portLeft, portRight)
-        changeMainMotorVelocity(velocityPercent)
-        changeAttachMotorVelocity(velocityPercent)
-        changeTimeout(timeout)
+        self.changeMainPorts(mainPortLeft, mainPortRight)
         
-        showMyRobotConfig()
+        
+        #TODO: the default values cause this to not be set as it converts 
+        self.changeMainMotorVelocity(mainMotorVelocity)
+        self.changeAttachMotorVelocity(attachMotorVelocity)
+        self.changeTimeout(timeout)
+        
+        self.showMyRobotConfig()
         
         return
     
-    def showMyRobotConfig() -> None:
+    def showMyRobotConfig(self) -> None:
         print("Motor Config for: ", self.name)
         
         print("mainPortLeft: ", self.mainPortLeft)
@@ -47,10 +47,10 @@ class RobotConfig:
 
     def changeMainMotorVelocity(self, velocityPercent: int) -> None:
         if (10 <= velocityPercent <= 90):
-            self.mainMotorVelocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercent
+            self.mainMotorVelocity = self.LARGE_MOTOR_MAX_VELOCITY * velocityPercent/100
             print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
         else:
-            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\nLeft Unchanged")
+            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
         return
 
     def getMainMotorVelocity(self) -> int:
@@ -58,10 +58,10 @@ class RobotConfig:
 
     def changeAttachMotorVelocity(self, velocityPercent: int) -> None:
         if (10 <= velocityPercent <= 90):
-            self.attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent
+            self.attachMotorVelocity = self.MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent/100
             print("setAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
         else:
-            print("setAttachMotorVelocity: velocityPercent should be between 10 and 90\nLeft Unchanged")
+            print("setAttachMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
         return        
 
     def getAttachMotorVelocity(self) -> int:

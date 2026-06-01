@@ -22,7 +22,7 @@ async def pivotTurn(degreesToTurn, velocity) -> None:
     print("Pivot Turn")
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable) #commented out because this check was taking too long each call for little gain
 
     if(degreesToTurn > 0):
         motor_pair.move_tank(motor_pair.PAIR_1, velocity, 0) #right turn
@@ -48,7 +48,7 @@ async def spinTurn(degreesToTurn, velocity) -> None:
     print("Spin Turn")
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable)
 
     if(degreesToTurn > 0):
         motor_pair.move_tank(motor_pair.PAIR_1, velocity, -1 * velocity) #right turn
@@ -75,7 +75,7 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
     print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable)
 
     startTime = time.ticks_ms()
     print("Start time: ", startTime)
@@ -116,7 +116,7 @@ async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout =
     print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable)
 
     startTime = time.ticks_ms()
     print("Start time: ", startTime)
@@ -168,7 +168,7 @@ async def __moveForwardProporational(rotations, velocity, acceleration = 500, br
     print("Move Forward Proportional. Rotations = " + str(rotations) + ", Velocity = " + str(velocity) + ", Acceleration = " + str(acceleration) + ", Brake = " + str(brakeStartPercentage) + ", Correction Multiplier = " + str(correctionMultiplier))
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable)
 
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot
@@ -197,7 +197,7 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
     print("Move Backward Proportional. Rotations = " + str(rotations) + ", Velocity = " + str(velocity) + ", Acceleration = " + str(acceleration) + ", Brake = " + str(brakeStartPercentage) + ", Correction Multiplier = " + str(correctionMultiplier))
 
     motion_sensor.reset_yaw(0)
-    await runloop.until(motion_sensor.stable)
+    #await runloop.until(motion_sensor.stable)
 
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot

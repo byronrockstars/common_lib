@@ -263,11 +263,13 @@ def __whiteLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
 
 
 #Moves straight ahead until one of the two light sensors finds the line with the inputted line color.
+#Returns the port number of the sensor that found the line. (ex. port.B)
 #Input parameters:  leftLightSensorPort: port number of left light sensor (ex port.B)
 #                   rightLightSensorPort: port number of right light sensor (ex. port.D)
 #                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
 #                   velocityPercentage (optional): how fast (-100% to 100%) to move in a straight line. Negative values move backwards.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
+# 
 #Note: ideal height of light sensor off of ground is 16mm (2 Lego blocks)
 async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> int:
     print("In moveStraightUntilBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 

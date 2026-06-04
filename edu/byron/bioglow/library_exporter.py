@@ -1,15 +1,94 @@
 import sys, os
 
-libraryFile = 'rockstar_lib.py'
-classesFile = "rockstar_classes.py"
+libraryFile = 'Combined.py'
 
 libCode: str = """
+#Combined
+class RobotConfig:
+    LARGE_MOTOR_MAX_VELOCITY = 1050
+    MEDIUM_MOTOR_MAX_VELOCITY = 1110
+
+    DEFAULT_VELOCITY_PERCENT = 25 #percentage
+    DEFAULT_TIMEOUT_SEC = 2 #seconds
+
+    def __init__(
+        self,
+        name: str,
+        mainPortLeft,
+        mainPortRight,        
+        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        timeout: int = DEFAULT_TIMEOUT_SEC,
+    ):
+        self.name = name
+        
+        self.changeMainPorts(mainPortLeft, mainPortRight)
+        
+        #TODO: the default values for each motor cause this to not be set as it converts from percent to velocity above 
+        self.changeMainMotorVelocity(mainMotorVelocity)
+        self.changeAttachMotorVelocity(attachMotorVelocity)
+        
+        self.changeTimeout(timeout)
+        
+        self.showMyRobotConfig()
+        
+        return
+    
+    def showMyRobotConfig(self) -> None:
+        print("Motor Config for: ", self.name)
+        
+        print("mainPortLeft: ", self.mainPortLeft)
+        print("mainPortRight: ", self.mainPortRight)
+        print("mainMotorVelocity: ", self.mainMotorVelocity)
+        print("attachMotorVelocity: ", self.attachMotorVelocity)
+        print("timeout: ", self.timeout)
+        
+        return
+
+    def changeMainPorts(self, portLeft, portRight) -> None:
+        self.mainPortLeft = portLeft
+        self.mainPortRight = portRight
+        print("changeMainPorts: ports changed to: ", portLeft, ", ", portRight)
+        return
+
+    def changeMainMotorVelocity(self, velocityPercent: int) -> None:
+        if (10 <= velocityPercent <= 90):
+            self.mainMotorVelocity = self.LARGE_MOTOR_MAX_VELOCITY * velocityPercent/100
+            print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
+        else:
+            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
+        return
+
+    def getMainMotorVelocity(self) -> int:
+        return self.mainMotorVelocity
+
+    def changeAttachMotorVelocity(self, velocityPercent: int) -> None:
+        if (10 <= velocityPercent <= 90):
+            self.attachMotorVelocity = self.MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent/100
+            print("setAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
+        else:
+            print("setAttachMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
+        return        
+
+    def getAttachMotorVelocity(self) -> int:
+        return self.attachMotorVelocity
+
+    def changeTimeout(self, timeout: int) -> None:
+        self.timeout = timeout
+        print("changeTimeout: timeout updated to ", timeout, " seconds")
+
+    def getTimeout(self) -> int:
+        return self.timeout
+### End class RobotConfig
+
+### LIBRARY BEGIN
 from hub import light_matrix, motion_sensor, port, sound
 import hub
-import runloop, motor, motor_pair, sys, time
-import rockstar_classes
+import runloop, motor, motor_pair, sys, time, color_sensor, color
 
 LARGE_MOTOR_MAX_VELOCITY = 1050
+BLACK_LINE_LIGHT_REFLECTION = 50
+WHITE_LINE_LIGHT_REFLECTION = 95
 LEFT_WHEEL_PORT = port.A
 RIGHT_WHEEL_PORT = port.E
 
@@ -21,15 +100,13 @@ def __turnCompleted(degreesToTurn) -> bool:
 
 
 #Completes a pivot turn up to 179 degrees.
-#Input parameters:degreesToTurn: positive value if turning to right and negative if turning to left
-#                velocity: (deg/sec) Large motor range = -1050 to 1050
-async def pivotTurn(myConfig:RobotConfig, degreesToTurn) -> None:
+#Input parameters:  degreesToTurn: positive value if turning to right and negative if turning to left
+#                   velocity: (deg/sec) Large motor range = -1050 to 1050
+async def _pivotTurn(degreesToTurn, velocity) -> None:
     print("Pivot Turn")
 
     motion_sensor.reset_yaw(0)
-    #await runloop.until(motion_sensor.stable)
-
-    velocity = int(myConfig.getMainMotorVelocity())
+    #await runloop.until(motion_sensor.stable) #commented out because this check was taking too long each call for little gain
 
     if(degreesToTurn > 0):
         motor_pair.move_tank(motor_pair.PAIR_1, velocity, 0) #right turn
@@ -49,9 +126,9 @@ async def pivotTurn(myConfig:RobotConfig, degreesToTurn) -> None:
 
 
 #Completes a spin turn up to 179 degrees.
-#Input parameters:degreesToTurn: positive value if turning to right and negative if turning to left
-#                velocity: (deg/sec) Large motor range = -1050 to 1050
-async def spinTurn(degreesToTurn, velocity) -> None:
+#Input parameters:  degreesToTurn: positive value if turning to right and negative if turning to left
+#                   velocity: (deg/sec) Large motor range = -1050 to 1050
+async def _spinTurn(degreesToTurn, velocity) -> None:
     print("Spin Turn")
 
     motion_sensor.reset_yaw(0)
@@ -74,11 +151,11 @@ async def spinTurn(degreesToTurn, velocity) -> None:
     return
 
 
-#Complete a pivot turn and slow down as the turn completes to ensure accuracy.
+#Complete a pivot turn and slow down as the turn completes to ensure accuracy. 
 #Input parameters: degreesToTurn: positive value if turning to right and negative if turning to left (-180 to 180)
-#                velocityPercentage (optional): how fast to complete the turn in percentage (1 to 100)
-#                timeout (optional): maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached.
-async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout = 2.0) -> None:
+#                  velocityPercentage (optional): how fast to complete the turn in percentage (1 to 100) 
+#                  timeout (optional): maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached. 
+async def _proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout = 2.0) -> None:
     print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
@@ -95,7 +172,7 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
-        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/40#pivot turns are slower so take a larger percentage of the max velocity
+        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/40  #pivot turns are slower so take a larger percentage of the max velocity 
 
         if(degreesToTurn > 0):
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0) #right turn
@@ -119,7 +196,7 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
 #Input parameters:degreesToTurn: positive value if turning to right and negative if turning to left (-180 to 180)
 #                velocityPercentage (optional): how fast to complete the turn in percentage (1 to 100)
 #                timeout (optional): maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached.
-async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout = 2.0) -> None:
+async def _proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout = 2.0) -> None:
     print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
@@ -161,7 +238,7 @@ async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout =
 #                velocityPercentage: 0% to 100%.
 #                acceleration (optional): (deg/sec^2) Default is 500.
 #                deceleration (optional): (deg/sec^2) Default is 1000.
-async def moveForward(stoppingRotations, velocityPercentage, acceleration = 500, deceleration = 1000) -> None:
+async def _moveForward(stoppingRotations, velocityPercentage, acceleration = 500, deceleration = 1000) -> None:
     print("In moveForward function, rotations to move = " + str(stoppingRotations) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ", deceleration = " + str(deceleration) + ".")
 
     degreesToMove = stoppingRotations * 360
@@ -186,15 +263,15 @@ async def __moveForwardProporational(rotations, velocity, acceleration = 500, br
         error = motion_sensor.tilt_angles()[0] * -0.1 #gyro reading should be 0 if robot is moving straight
         correction = int(error * correctionMultiplier)
         #print("Correction = " + str(correction))
-
+ 
         deceleration = 0
         degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
-
-        if(degreesTraveled > brakeStartDistance):
+        
+        if(degreesTraveled > brakeStartDistance): 
             deceleration = min(velocity * degreesTraveled/degrees, velocity - endSpeed)
 
         motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction - int(deceleration), velocity - correction - int(deceleration), acceleration=acceleration)
-
+        
     motor_pair.stop(motor_pair.PAIR_1)
     print("Final relative position = " + str(motor.relative_position(RIGHT_WHEEL_PORT)))
     return
@@ -220,7 +297,7 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
         degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
 
         if(degreesTraveled < brakeStartDistance):
-            deceleration = max(velocity * degreesTraveled/degrees, velocity + endSpeed)#deceleration is negative when moving backwards
+            deceleration = max(velocity * degreesTraveled/degrees, velocity + endSpeed)  #deceleration is negative when moving backwards
         #print("Deceleration = ", deceleration)
         #print("Speed = ", velocity + correction - int(deceleration))
 
@@ -233,100 +310,202 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
 
 
 #Moves straight using the gyro sensor to correct drift.
-#Input parameters:stoppingRotations: positive value if going forward and negative if going backward
-#                velocityPercentage: 0 to +100.
-#                acceleration (optional): (deg/sec^2) Default is 500.
-#                brakeStartValue (optional): Decimal percentage of the driven distance after which the robot starts braking.
-#                correctionMultiplier (optional): Used to determine how sharply to correct drift. Must be negative, and lower values make sharper corrections.
-#                                                    Typical values are -1 to -5.
-async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue = 0.9, correctionMultiplier = -3.5) -> None:
+#Input parameters:  stoppingRotations: positive value if going forward and negative if going backward
+#                   velocityPercentage: 0 to +100. 
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+#                   brakeStartValue (optional): Decimal percentage of the driven distance after which the robot starts braking.
+#                   correctionMultiplier (optional): Used to determine how sharply to correct drift. Must be negative, and lower values make sharper corrections. 
+#                                                    Typical values are -1 to -5. 
+async def _moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue = 0.9, correctionMultiplier = -3.5) -> None:
     print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage) + ", Acceleration = " + str(acceleration) + ", Brake Start Value = " + str(brakeStartValue) + ", Correction Multiplier = " + str(correctionMultiplier) + ".")
-    velocity = LARGE_MOTOR_MAX_VELOCITY * abs(velocityPercentage)/100#negative values for velocity are not allowed so take absolute value
-
+    velocity = LARGE_MOTOR_MAX_VELOCITY * abs(velocityPercentage)/100  #negative values for velocity are not allowed so take absolute value
+    
     if(stoppingRotations > 0):
         await __moveForwardProporational(stoppingRotations, int(velocity), acceleration, brakeStartValue, correctionMultiplier)
     else:
         await __moveBackwardProporational(stoppingRotations, int(velocity * -1), acceleration, brakeStartValue, correctionMultiplier)
-
-    return
-"""
-
-
-classesCode: str = """
-class RobotConfig:
-    LARGE_MOTOR_MAX_VELOCITY = 1050
-    MEDIUM_MOTOR_MAX_VELOCITY = 1110
-
-    DEFAULT_VELOCITY_PERCENT = 25 #percentage
-    DEFAULT_TIMEOUT_SEC = 2 #seconds
-
-    def __init__(
-        self,
-        name: str,
-        mainPortLeft,
-        mainPortRight,
-        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        timeout: int = DEFAULT_TIMEOUT_SEC,
-    ):
-        self.name = name
-
-        self.changeMainPorts(mainPortLeft, mainPortRight)
-        self.mainMotorVelocity = mainMotorVelocity
-        self.changeMainMotorVelocity(mainMotorVelocity)
-        self.attachMotorVelocity = attachMotorVelocity
-        self.changeAttachMotorVelocity(attachMotorVelocity)
-        self.changeTimeout(timeout)
-
-        self.showMyRobotConfig()
-
-        return
-
-    def showMyRobotConfig(self) -> None:
-        print("Motor Config for: ", self.name)
-
-        print("mainPortLeft: ", self.mainPortLeft)
-        print("mainPortRight: ", self.mainPortRight)
-        print("mainMotorVelocity: ", self.mainMotorVelocity)
-        print("attachMotorVelocity: ", self.attachMotorVelocity)
-        print("timeout: ", self.timeout)
-
-        return
-
-    def changeMainPorts(self, portLeft, portRight) -> None:
-        self.mainPortLeft = portLeft
-        self.mainPortRight = portRight
-        print("changeMainPorts: ports changed to: ", portLeft, ", ", portRight)
-        return
-
-    def changeMainMotorVelocity(self, velocityPercent: int) -> None:
-        if (10 <= velocityPercent <= 90):
-            self.mainMotorVelocity = self.LARGE_MOTOR_MAX_VELOCITY * velocityPercent/100
-            print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
-        else:
-            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
-        return
     
-    def getMainMotorVelocity(self) -> int:
-        return self.mainMotorVelocity
+    return
 
-    def changeAttachMotorVelocity(self, velocityPercent: int) -> None:
-        if (10 <= velocityPercent <= 90):
-            self.attachMotorVelocity = self.MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent/100
-            print("setAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
+
+def __blackLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+    #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
+    #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
+    
+    #alternate way to determine black line but may not work as consistently as light reflection
+    #color_sensor.color(leftLightSensorPort) == color.BLACK or color_sensor.color(rightLightSensorPort) == color.BLACK
+    
+    return (color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+
+
+def __whiteLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+    #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
+    #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
+    
+    #color_sensor.color(leftLightSensorPort) == color.WHITE or color_sensor.color(rightLightSensorPort) == color.WHITE
+    return (color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+
+
+#Moves straight ahead until one of the two light sensors finds the line with the inputted line color.
+#Returns the port number of the sensor that found the line. (ex. port.B)
+#Input parameters:  leftLightSensorPort: port number of left light sensor (ex port.B)
+#                   rightLightSensorPort: port number of right light sensor (ex. port.D)
+#                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
+#                   velocityPercentage (optional): how fast (-100% to 100%) to move in a straight line. Negative values move backwards.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+# 
+#Note: ideal height of light sensor off of ground is 16mm (2 Lego blocks)
+async def _moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> int:
+    print("In moveStraightUntilBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 
+            str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)  + ", acceleration = " + str(acceleration) + ".")
+
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    motor_pair.move(motor_pair.PAIR_1, 0, velocity=int(velocity), acceleration=acceleration)  
+
+    triggeredSensorPort = -1
+
+    if(lineColor == color.BLACK):
+        #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
+        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort))
+
+        if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
+            print("Left light sensor found black line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+            triggeredSensorPort = leftLightSensorPort
         else:
-            print("setAttachMotorVelocity: velocityPercent should be between 10 and 90\\nLeft Unchanged")
-        return
+            print("Right light sensor found black line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+            triggeredSensorPort = rightLightSensorPort
+    elif(lineColor == color.WHITE):
+        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort))
 
-    def getAttachMotorVelocity(self) -> int:
-        return self.attachMotorVelocity
+        if(color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
+            print("Left light sensor found white line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+            triggeredSensorPort = leftLightSensorPort
+        else:
+            print("Right light sensor found white line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+            triggeredSensorPort = rightLightSensorPort
+    else:
+        print("Line color of " + str(lineColor) + " is invalid.")
 
-    def changeTimeout(self, timeout: int) -> None:
-        self.timeout = timeout
-        print("changeTimeout: timeout updated to ", timeout, " seconds")
+    # stop and exit
+    motor_pair.stop(motor_pair.PAIR_1)
+    return triggeredSensorPort
 
-    def getTimeout(self) -> int:
-        return self.timeout
+### LIBRARY END
+        
+### WRAPPER BEGIN
+
+def moveBackward(myConfig:RobotConfig, rotations):
+    if(isinstance(rotations, (int, float))):
+        _moveForward(myConfig, -360 * rotations)
+    else:
+        print("moveBackward: rotations must be a number")
+    return
+
+def moveForward(myConfig:RobotConfig, rotations):
+    if(isinstance(rotations, (int, float))):
+        _moveForward(myConfig, 360 * rotations)
+    else:
+        print("moveForward: rotations must be a number")    
+    return
+
+async def displayMessage(myConfig:RobotConfig, messageToDisplay):
+    light_matrix.write(str(messageToDisplay)) 
+    return
+
+def pivotTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        _pivotTurn(myConfig, degreesToTurn)
+    else:
+        print("pivotTurnRight: degreesToTurn must be a number")    
+    return
+
+def pivotTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        _pivotTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("pivotTurnLeft: degreesToTurn must be a number")        
+    return
+
+def spinTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):
+        _spinTurn(myConfig, degreesToTurn)
+    else:
+        print("spinTurnRight: degreesToTurn must be a number")                
+    return
+    
+def spinTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        _spinTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("spinTurnLeft: degreesToTurn must be a number")                    
+    return
+    
+def proportionalSpinTurnLeft(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        _proportionalSpinTurn(myConfig, -1 * degreesToTurn)
+    else:
+        print("proportionalSpinTurnLeft: degreesToTurn must be a number")                        
+    return
+
+def proportionalSpinTurnRight(myConfig:RobotConfig, degreesToTurn):
+    if(isinstance(degreesToTurn, int)):    
+        _proportionalSpinTurn(myConfig, degreesToTurn)
+    else:
+        print("proportionalSpinTurnRight: degreesToTurn must be a number")                            
+    return
+
+def moveForwardGyro(myConfig:RobotConfig, stoppingRotations):    
+    if(isinstance(stoppingRotations, int)):        
+        _moveStraightWheelRotation(myConfig, stoppingRotations)
+    else:
+        print("moveForwardGyro: stoppingRotations must be a number")                                
+    return
+    
+def moveBackwardGyro(myConfig:RobotConfig, stoppingRotations):    
+    if(isinstance(stoppingRotations, int)):
+        _moveStraightWheelRotation(myConfig, -1 * stoppingRotations)
+    else:
+        print("moveBackwardGyro: stoppingRotations must be a number")                                    
+    return
+    
+def resetEverything(myConfig:RobotConfig):
+    #_allSensorReset()
+    
+    newConfig = RobotConfig(myConfig.name,  
+        mainPortLeft = myConfig.mainPortLeft,
+        mainPortRight = myConfig.mainPortRight,
+    )
+    
+    myConfig.changeMainMotorVelocity(newConfig.getMainMotorVelocity())
+    myConfig.changeAttachMotorVelocity(newConfig.getAttachMotorVelocity())
+    myConfig.changeTimeout(newConfig.getTimeout())
+    
+    print("resetEverything: Complete")
+        
+    return
+    
+def initializeRobot(name: str,
+        mainPortLeft,
+        mainPortRight
+        ) -> RobotConfig:
+    
+    #config   
+    newConfig = RobotConfig(name = name,  
+        mainPortLeft = mainPortLeft,
+        mainPortRight = mainPortRight,        
+    )
+    
+    #sensors
+    #_allSensorReset()
+    
+    #motors
+    motor_pair.pair(motor_pair.PAIR_1, newConfig.mainPortLeft, newConfig.mainPortRight)
+     
+    print("initializeRobot: Complete")
+        
+    return newConfig
+
+### WRAPPER END
 """
 
 def exportLibrary():

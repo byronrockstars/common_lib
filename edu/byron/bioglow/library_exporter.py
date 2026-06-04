@@ -15,12 +15,14 @@ class RobotConfig:
         self,
         name: str,
         mainPortLeft,
-        mainPortRight,        
-        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        timeout: int = DEFAULT_TIMEOUT_SEC,
+        mainPortRight        
     ):
         self.name = name
+        self.mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
+        self.attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
+        self.timeout: int = DEFAULT_TIMEOUT_SEC
+        self.mainPortLeft = mainPortLeft
+        self.mainPortRight = mainPortRight
         
         self.changeMainPorts(mainPortLeft, mainPortRight)
         

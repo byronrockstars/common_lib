@@ -12,7 +12,8 @@ async def main():
 
     motor_pair.pair(motor_pair.PAIR_1, myConfig.mainPortLeft, myConfig.mainPortRight)
 
-    RL.moveForward(myRobot, 360)
+    RL.showMyRobotConfig()
+    #RL.moveForward(myRobot, 360)
     return
 
 runloop.run(main())

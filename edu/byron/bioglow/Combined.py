@@ -11,12 +11,15 @@ class RobotConfig:
         self,
         name: str,
         mainPortLeft,
-        mainPortRight        
+        mainPortRight,
+        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        timeout = DEFAULT_TIMEOUT_SEC
     ):
         self.name = name
-        self.mainMotorVelocity = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
-        self.attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
-        self.timeout = DEFAULT_TIMEOUT_SEC
+        self.mainMotorVelocity = mainMotorVelocity
+        self.attachMotorVelocity = attachMotorVelocity
+        self.timeout = timeout
         self.mainPortLeft = mainPortLeft
         self.mainPortRight = mainPortRight
         
@@ -490,7 +493,7 @@ def initializeRobot(name: str,
     #config   
     newConfig = RobotConfig(name = name,  
         mainPortLeft = mainPortLeft,
-        mainPortRight = mainPortRight,        
+        mainPortRight = mainPortRight        
     )
     
     #sensors

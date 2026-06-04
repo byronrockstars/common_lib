@@ -1,10 +1,11 @@
 #Combined
-class RobotConfig:
-    LARGE_MOTOR_MAX_VELOCITY = 1050
-    MEDIUM_MOTOR_MAX_VELOCITY = 1110
+LARGE_MOTOR_MAX_VELOCITY = 1050
+MEDIUM_MOTOR_MAX_VELOCITY = 1110
 
-    DEFAULT_VELOCITY_PERCENT = 25 #percentage
-    DEFAULT_TIMEOUT_SEC = 2 #seconds
+DEFAULT_VELOCITY_PERCENT = 25 #percentage
+DEFAULT_TIMEOUT_SEC = 2 #seconds
+    
+class RobotConfig:
 
     def __init__(
         self,
@@ -13,9 +14,9 @@ class RobotConfig:
         mainPortRight        
     ):
         self.name = name
-        self.mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
-        self.attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
-        self.timeout: int = DEFAULT_TIMEOUT_SEC
+        self.mainMotorVelocity = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
+        self.attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100
+        self.timeout = DEFAULT_TIMEOUT_SEC
         self.mainPortLeft = mainPortLeft
         self.mainPortRight = mainPortRight
         

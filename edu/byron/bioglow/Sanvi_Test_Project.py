@@ -5,14 +5,14 @@ import Combined as RL
 LARGE_MOTOR_MAX_VELOCITY = 1050
 
 async def main():
-    myConfig = RobotConfig(name = "Pez",  
+    myRobot = RL.initializeRobot(name = "Pez",  
         mainPortLeft = port.A,
         mainPortRight = port.E,        
     )
 
     motor_pair.pair(motor_pair.PAIR_1, myConfig.mainPortLeft, myConfig.mainPortRight)
 
-    moveForward(360)
+    RL.moveForward(myRobot, 360)
     return
 
 runloop.run(main())

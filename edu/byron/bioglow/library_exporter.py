@@ -511,7 +511,6 @@ def initializeRobot(name: str,
 def exportLibrary():
     global libCode
     global libraryFile
-    global classesFile
 
     deleteLibrary()
 
@@ -520,35 +519,18 @@ def exportLibrary():
     libFile.close()
     print("Export of library complete.")
 
-    classesConfigFile = open(classesFile, 'w+')
-    classesConfigFile.write(classesCode)
-    classesConfigFile.close()
-    print("Export of classes complete.")
-
-
 #TODO: add error handling for file open/close issues
 def readLibrary():
-    #libFile = open(libraryFile, 'r')
-    #contents = libFile.read()
-    #print(contents)
-    #libFile.close()
+    libFile = open(libraryFile, 'r')
+    contents = libFile.read()
+    print(contents)
+    libFile.close()
 
     print("\n\n")
-
-    classesConfigFile = open(classesFile, 'r')
-    contents = classesConfigFile.read()
-    print(contents)
-    classesConfigFile.close()
-
 
 def deleteLibrary():
     try:
         os.remove(libraryFile) #remove any existing custom library with the same name
-    except:
-        pass
-
-    try:
-        os.remove(classesFile) #remove any existing classes file with the same name
     except:
         pass
 

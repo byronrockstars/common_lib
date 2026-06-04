@@ -1,6 +1,6 @@
 from hub import light_matrix, motion_sensor, port, sound
 import runloop, motor, motor_pair, sys, time
-import Combined as rockstar_lib
+import Combined as RL
 
 LARGE_MOTOR_MAX_VELOCITY = 1050
 

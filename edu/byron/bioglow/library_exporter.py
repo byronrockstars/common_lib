@@ -18,8 +18,8 @@ class RobotConfig:
         mainPortLeft,
         mainPortRight,
         mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        timeout = DEFAULT_TIMEOUT_SEC
+        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        timeout: int = DEFAULT_TIMEOUT_SEC
     ):
         self.name = name
         self.mainMotorVelocity = mainMotorVelocity
@@ -36,7 +36,7 @@ class RobotConfig:
         
         self.changeTimeout(timeout)
         
-        self.showMyRobotConfig()
+        #self.showMyRobotConfig()
         
         return
     
@@ -538,6 +538,7 @@ def deleteLibrary():
     try:
         os.remove(libraryFile) #remove any existing custom library with the same name
     except:
+        print("No current library to delete")
         pass
 
 
@@ -548,10 +549,10 @@ def readDirectory():
 
 
 os.chdir('/flash') #change directory to root
-#readDirectory()
-#deleteLibrary()
-#readDirectory()
+readDirectory()
+deleteLibrary()
+readDirectory()
 exportLibrary()
-readLibrary()
+#readLibrary()
 readDirectory()
 sys.exit(0)

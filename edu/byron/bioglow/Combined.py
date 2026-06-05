@@ -13,8 +13,8 @@ class RobotConfig:
         mainPortLeft,
         mainPortRight,
         mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
-        timeout = DEFAULT_TIMEOUT_SEC
+        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT/100,
+        timeout: int = DEFAULT_TIMEOUT_SEC
     ):
         self.name = name
         self.mainMotorVelocity = mainMotorVelocity
@@ -31,7 +31,7 @@ class RobotConfig:
         
         self.changeTimeout(timeout)
         
-        self.showMyRobotConfig()
+        #self.showMyRobotConfig()
         
         return
     

@@ -26,10 +26,10 @@ class RobotConfig:
         self.changeMainPorts(mainPortLeft, mainPortRight)
         
         #TODO: the default values for each motor cause this to not be set as it converts from percent to velocity above 
-        self.changeMainMotorVelocity(mainMotorVelocity)
-        self.changeAttachMotorVelocity(attachMotorVelocity)
+        #self.changeMainMotorVelocity(mainMotorVelocity)
+        #self.changeAttachMotorVelocity(attachMotorVelocity)
         
-        self.changeTimeout(timeout)
+        #self.changeTimeout(timeout)
         
         #self.showMyRobotConfig()
         

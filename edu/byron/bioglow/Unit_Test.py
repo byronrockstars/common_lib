@@ -11,11 +11,11 @@ def main():
 
     myRobot.showMyRobotConfig()
 
-    RL.displayMessage(myRobot, "Pez")
+    #RL.displayMessage(myRobot, "P")
 
     # Movement wrappers in Combined.py are synchronous for end users.
     # Uncomment one test at a time when the robot is safely positioned.
-    # RL.moveForward(myRobot, 1)
+    RL.moveForward(myRobot, 1)
     # RL.moveBackward(myRobot, 1)
     # RL.pivotTurnRight(myRobot, 90)
     # RL.pivotTurnLeft(myRobot, 90)

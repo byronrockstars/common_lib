@@ -50,7 +50,8 @@ class RobotConfig:
             self.mainMotorVelocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercent / 100
             print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
         else:
-            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90\nLeft Unchanged")
+            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90")
+            print("Left Unchanged")
 
     def getMainMotorVelocity(self) -> int:
         return self.mainMotorVelocity
@@ -60,7 +61,8 @@ class RobotConfig:
             self.attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent / 100
             print("changeAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
         else:
-            print("changeAttachMotorVelocity: velocityPercent should be between 10 and 90\nLeft Unchanged")
+            print("changeAttachMotorVelocity: velocityPercent should be between 10 and 90")
+            print("Left Unchanged")
 
     def getAttachMotorVelocity(self) -> int:
         return self.attachMotorVelocity

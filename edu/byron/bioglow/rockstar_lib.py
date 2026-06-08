@@ -306,3 +306,46 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
     motor_pair.stop(motor_pair.PAIR_1)
     return triggeredSensorPort
 
+
+#Rotates robot until second light sensor finds the colored line.
+#Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
+#                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
+#                   lightColor: color of line to search for (color.BLACK or color.WHITE)
+#                   velocityPercentage: 0% to 100%.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> None: 
+    print("In getSecondLightSensorOnLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " +
+            str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)+ ", acceleration = " + str(acceleration) + ".")
+
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+
+    if(lineColor == color.BLACK):
+        if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
+            print("Before movement, left light sensor on black line = ", color_sensor.reflection(leftLightSensorPort))
+            #since left light sensor is already on black line, must move to the left to get right sensor on black line
+            motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration) 
+            await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+        else: 
+            print("Before movement, left light sensor NOT on black = ", color_sensor.reflection(leftLightSensorPort))
+            #since right light sensor is already on black line, must move to the right to get left sensor on black line
+            motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), 0, acceleration=acceleration)
+            await runloop.until(lambda: color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+    elif(lineColor == color.WHITE):
+        if(color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
+            print("Before movement, left light sensor on white line = ", color_sensor.reflection(leftLightSensorPort))
+            #since left light sensor is already on white line, must move to the left to get right sensor on white line
+            motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
+            await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+        else:
+            print("Before movement, left light sensor NOT on white line = ", color_sensor.reflection(leftLightSensorPort))
+            #since right light sensor is already on white line, must move to the right to get left sensor on white line
+            motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), 0, acceleration=acceleration)
+            await runloop.until(lambda: color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+    else:
+        print("Line color of " + str(lineColor) + " is invalid.")
+
+    motor_pair.stop(motor_pair.PAIR_1)
+    print("Left light sensor reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+    print("Right light sensor reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+
+    return

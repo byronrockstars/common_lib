@@ -26,7 +26,7 @@ Create a fresh `Combined.py` by copying the library and wrapper logic into one f
 5. Fix wrapper-to-library argument mismatches inside `Combined.py` only.
    - Wrapper functions should accept `RobotConfig`.
    - Internal `_` library functions should receive the raw values they expect, such as rotations, degrees, velocity, velocity percentage, timeout, ports, or colors.
-6. For async library functions, make the public wrapper functions async and use `await` when calling the internal `_` functions.
+6. For end-user simplicity, public wrapper functions may remain synchronous and call `runloop.run(...)` around internal async `_` functions. If a project intentionally wants an async public API, make wrappers async and use `await`, but preserve the chosen wrapper style consistently.
 7. Use `RobotConfig` as the single place for user-facing configuration, including motor ports, motor velocities, and timeout.
 8. Add only minimal comments: no more than one line comment per function, and remove unnecessary existing comments.
 9. Do not change behavior beyond the required compatibility fixes.
@@ -37,19 +37,32 @@ Create a fresh `Combined.py` by copying the library and wrapper logic into one f
 Use this pattern when adapting wrapper calls:
 
 ```python
-async def moveForward(myConfig: RobotConfig, rotations):
+def moveForward(myConfig: RobotConfig, rotations):
     if isinstance(rotations, (int, float)):
-        await _moveForward(rotations, _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY))
+        runloop.run(_moveForward(
+            rotations,
+            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
+        ))
     else:
         print("moveForward: rotations must be a number")
 ```
 
 ```python
-async def pivotTurnRight(myConfig: RobotConfig, degreesToTurn):
+def pivotTurnRight(myConfig: RobotConfig, degreesToTurn):
     if isinstance(degreesToTurn, int):
-        await _pivotTurn(degreesToTurn, myConfig.getMainMotorVelocity())
+        runloop.run(_pivotTurn(degreesToTurn, myConfig.getMainMotorVelocity()))
     else:
         print("pivotTurnRight: degreesToTurn must be a number")
+```
+
+```python
+def getSecondLightSensorOnBlackLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort):
+    runloop.run(_getSecondLightSensorOnLine(
+        leftLightSensorPort,
+        rightLightSensorPort,
+        color.BLACK,
+        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
+    ))
 ```
 
 ## Output

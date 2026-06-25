@@ -244,35 +244,40 @@ async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, accel
     return
 
 
-def __blackLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+def __blackLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine) -> bool:
     #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
     #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
     
     #alternate way to determine black line but may not work as consistently as light reflection
     #color_sensor.color(leftLightSensorPort) == color.BLACK or color_sensor.color(rightLightSensorPort) == color.BLACK
-    
-    return (color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+
+    if bothSensorsOnLine:
+        return (color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION and color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+    else:
+        return (color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
 
 
-def __whiteLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
+def __whiteLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine) -> bool:
     #print("Left sensor reflection value: ", color_sensor.reflection(leftLightSensorPort))
     #print("Right sensor reflection value: ", color_sensor.reflection(rightLightSensorPort))
     
-    #color_sensor.color(leftLightSensorPort) == color.WHITE or color_sensor.color(rightLightSensorPort) == color.WHITE
-    return (color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+    if bothSensorsOnLine:
+        return (color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION and color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
+    else:
+        return (color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
 
 
+#TODO: allow for using gyro sensor to move
 #Moves straight ahead until one of the two light sensors finds the line with the inputted line color.
-#Returns the port number of the sensor that found the line. (ex. port.B)
 #Input parameters:  leftLightSensorPort: port number of left light sensor (ex port.B)
 #                   rightLightSensorPort: port number of right light sensor (ex. port.D)
 #                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
+#                   bothSensorsOnLine (optional): True if robot should run until both light sensors are on line. False if robot should stop once first light sensor is on line.
 #                   velocityPercentage (optional): how fast (-100% to 100%) to move in a straight line. Negative values move backwards.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
-# 
 #Note: ideal height of light sensor off of ground is 16mm (2 Lego blocks)
-async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> int:
-    print("In moveStraightUntilBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 
+async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500) -> int:
+    print("In moveStraightUntilLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 
             str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)  + ", acceleration = " + str(acceleration) + ".")
 
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
@@ -282,28 +287,28 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
 
     if(lineColor == color.BLACK):
         #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
-        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort))
+        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine))
 
         if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
-            print("Left light sensor found black line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
             triggeredSensorPort = leftLightSensorPort
         else:
-            print("Right light sensor found black line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
             triggeredSensorPort = rightLightSensorPort
     elif(lineColor == color.WHITE):
-        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort))
+        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine))
 
         if(color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
-            print("Left light sensor found white line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
             triggeredSensorPort = leftLightSensorPort
         else:
-            print("Right light sensor found white line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
             triggeredSensorPort = rightLightSensorPort
     else:
         print("Line color of " + str(lineColor) + " is invalid.")
 
     # stop and exit
     motor_pair.stop(motor_pair.PAIR_1)
+    print("Triggered Sensor Port = ", triggeredSensorPort)
+    print("Left light sensor reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
+    print("Right light sensor reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+
     return triggeredSensorPort
 
 
@@ -311,7 +316,7 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
 #Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
 #                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
 #                   lightColor: color of line to search for (color.BLACK or color.WHITE)
-#                   velocityPercentage: 0% to 100%.
+#                   velocityPercentage (optional): 0% to 100%.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
 async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> None: 
     print("In getSecondLightSensorOnLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " +
@@ -347,5 +352,56 @@ async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, 
     motor_pair.stop(motor_pair.PAIR_1)
     print("Left light sensor reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
     print("Right light sensor reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+
+    return
+
+
+#Squares up robot on black line by moving off the line and then back on. 
+#Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
+#                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
+#                   leftMoveFirst (optional): If true, left wheel of robot will move first (best if left light sensor was first to find black line originally)
+#                                  If false, right wheel of robot will move first (best if right light sensor was first to find black line originally)
+#                   velocityPercentage (optional): 0% to 100%.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst = True, velocityPercentage=10, acceleration=500) -> None:
+    print("In squareUpOnBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) +
+            ", leftMoveFirst = " + str(leftMoveFirst) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
+
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    
+    if(leftMoveFirst):
+        #back left wheel off black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+
+        #back right wheel off black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+
+        #move left wheel forward on black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
+        time.sleep(0.1)
+
+        #move right wheel forward on black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
+    else:
+        #back right wheel off black line
+        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(-1 * velocity), acceleration=acceleration)
+        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) > BLACK_LINE_LIGHT_REFLECTION)
+        motor_pair.stop(motor_pair.PAIR_1)
+        time.sleep(0.1)
+
+        #back left wheel off black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+
+        #move right wheel forward on black line   
+        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
+        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+        motor_pair.stop(motor_pair.PAIR_1)
+        time.sleep(0.1)
+
+        #move left wheel forward on black line
+        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
 
     return

@@ -22,6 +22,7 @@ async def pivotTurn(degreesToTurn, velocity) -> None:
     print("Pivot Turn")
 
     motion_sensor.reset_yaw(0)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable) #commented out because this check was taking too long each call for little gain
 
     if(degreesToTurn > 0):
@@ -48,6 +49,7 @@ async def spinTurn(degreesToTurn, velocity) -> None:
     print("Spin Turn")
 
     motion_sensor.reset_yaw(0)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable)
 
     if(degreesToTurn > 0):
@@ -75,6 +77,7 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
     print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable)
 
     startTime = time.ticks_ms()
@@ -116,6 +119,7 @@ async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout =
     print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable)
 
     startTime = time.ticks_ms()

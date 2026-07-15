@@ -1,116 +1,98 @@
 from hub import light_matrix, motion_sensor, port, sound
-import runloop, motor, motor_pair, sys, time
+import runloop, motor, motor_pair, sys, time, color_sensor, color
 import rockstar_lib as RL
-from myClasses import RobotConfig
 
-def moveBackward(myConfig:RobotConfig, rotations):
-    if(isinstance(rotations, (int, float))):
-        RL.moveForward(myConfig, -360 * rotations)
-    else:
-        print("moveBackward: rotations must be a number")
-    return
 
-def moveForward(myConfig:RobotConfig, rotations):
-    if(isinstance(rotations, (int, float))):
-        RL.moveForward(myConfig, 360 * rotations)
-    else:
-        print("moveForward: rotations must be a number")    
+def __velocity(velocityPercentage):
+    return int(RL.LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
+
+
+async def moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
+    await RL.moveForward(-1 * rotations, velocityPercentage, acceleration, deceleration)
     return
 
-async def displayMessage(myConfig:RobotConfig, messageToDisplay):
-    light_matrix.write(str(messageToDisplay)) 
+
+async def moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
+    await RL.moveForward(rotations, velocityPercentage, acceleration, deceleration)
     return
 
-def pivotTurnRight(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):
-        RL.pivotTurn(myConfig, degreesToTurn)
-    else:
-        print("pivotTurnRight: degreesToTurn must be a number")    
+
+async def displayMessage(messageToDisplay):
+    light_matrix.write(str(messageToDisplay))
     return
 
-def pivotTurnLeft(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):
-        RL.pivotTurn(myConfig, -1 * degreesToTurn)
-    else:
-        print("pivotTurnLeft: degreesToTurn must be a number")        
+
+async def pivotTurnRight(degreesToTurn, velocityPercentage=25):
+    await RL.pivotTurn(degreesToTurn, __velocity(velocityPercentage))
     return
 
-def spinTurnRight(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):
-        RL.spinTurn(myConfig, degreesToTurn)
-    else:
-        print("spinTurnRight: degreesToTurn must be a number")                
-    return
-    
-def spinTurnLeft(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):    
-        RL.spinTurn(myConfig, -1 * degreesToTurn)
-    else:
-        print("spinTurnLeft: degreesToTurn must be a number")                    
-    return
-    
-def proportionalSpinTurnLeft(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):    
-        RL.proportionalSpinTurn(myConfig, -1 * degreesToTurn)
-    else:
-        print("proportionalSpinTurnLeft: degreesToTurn must be a number")                        
+
+async def pivotTurnLeft(degreesToTurn, velocityPercentage=25):
+    await RL.pivotTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
     return
 
-def proportionalSpinTurnRight(myConfig:RobotConfig, degreesToTurn):
-    if(isinstance(degreesToTurn, int)):    
-        RL.proportionalSpinTurn(myConfig, degreesToTurn)
-    else:
-        print("proportionalSpinTurnRight: degreesToTurn must be a number")                            
+
+async def spinTurnRight(degreesToTurn, velocityPercentage=25):
+    await RL.spinTurn(degreesToTurn, __velocity(velocityPercentage))
     return
 
-def moveForwardGyro(myConfig:RobotConfig, stoppingRotations):    
-    if(isinstance(stoppingRotations, int)):        
-        RL.moveStraightWheelRotation(myConfig, stoppingRotations)
-    else:
-        print("moveForwardGyro: stoppingRotations must be a number")                                
+
+async def spinTurnLeft(degreesToTurn, velocityPercentage=25):
+    await RL.spinTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
     return
-    
-def moveBackwardGyro(myConfig:RobotConfig, stoppingRotations):    
-    if(isinstance(stoppingRotations, int)):
-        RL.moveStraightWheelRotation(myConfig, -1 * stoppingRotations)
-    else:
-        print("moveBackwardGyro: stoppingRotations must be a number")                                    
+
+
+async def proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await RL.proportionalPivotTurn(degreesToTurn, velocityPercentage, timeout)
     return
-    
-def resetEverything(myConfig:RobotConfig):
-    RL.allSensorReset()
-    
-    newConfig = RobotConfig(myConfig.name,  
-        mainPortLeft = myConfig.mainPortLeft,
-        mainPortRight = myConfig.mainPortRight,
-    )
-    
-    myConfig.changeMainMotorVelocity(newConfig.getMainMotorVelocity())
-    myConfig.changeAttachMotorVelocity(newConfig.getAttachMotorVelocity())
-    myConfig.changeTimeout(newConfig.getTimeout())
-    
+
+
+async def proportionalPivotTurnLeft(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await RL.proportionalPivotTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+    return
+
+
+async def proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await RL.proportionalSpinTurn(degreesToTurn, velocityPercentage, timeout)
+    return
+
+
+async def proportionalSpinTurnLeft(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await RL.proportionalSpinTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+    return
+
+
+async def moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
+    await RL.moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
+    return
+
+
+async def moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
+    await RL.moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
+    return
+
+
+async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500):
+    return await RL.moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine, velocityPercentage, acceleration)
+
+
+async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500):
+    await RL.getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
+    return
+
+
+async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst=True, velocityPercentage=10, acceleration=500):
+    await RL.squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst, velocityPercentage, acceleration)
+    return
+
+
+def resetEverything():
+    motion_sensor.reset_yaw(0); motor.reset_relative_position(RL.LEFT_WHEEL_PORT, 0); motor.reset_relative_position(RL.RIGHT_WHEEL_PORT, 0)
     print("resetEverything: Complete")
-        
     return
-    
-def initializeRobot(name: str,
-        mainPortLeft,
-        mainPortRight
-        ) -> RobotConfig:
-    
-    #config   
-    newConfig = RobotConfig(name = name,  
-        mainPortLeft = mainPortLeft,
-        mainPortRight = mainPortRight,        
-    )
-    
-    #sensors
-    RL.allSensorReset()
-    
-    #motors
-    motor_pair.pair(motor_pair.PAIR_1, newConfig.mainPortLeft, newConfig.mainPortRight)
-     
+
+
+def initializeRobot(name: str, mainPortLeft=RL.LEFT_WHEEL_PORT, mainPortRight=RL.RIGHT_WHEEL_PORT):
+    motor_pair.pair(motor_pair.PAIR_1, mainPortLeft, mainPortRight)
     print("initializeRobot: Complete")
-        
-    return newConfig
-    
+    return {"name": name, "mainPortLeft": mainPortLeft, "mainPortRight": mainPortRight}

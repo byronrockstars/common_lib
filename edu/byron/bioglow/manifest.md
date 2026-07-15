@@ -6,6 +6,8 @@ Use this manifest when writing end-user robot programs that import and use `Comb
 
 ```python
 from hub import port
+import runloop
+import color
 import Combined as RL
 ```
 
@@ -21,7 +23,7 @@ myRobot = RL.initializeRobot(
 )
 ```
 
-`myRobot` stores the robot configuration, including motor ports, motor velocity, attachment motor velocity, and timeout.
+`myRobot` stores the robot name and main motor ports returned by the wrapper.
 
 ## INITIALIZE
 
@@ -42,37 +44,39 @@ myRobot = RL.initializeRobot(
 ## RESET
 
 ```python
-RL.resetEverything(myRobot)
+RL.resetEverything()
 ```
 
 Example:
 
 ```python
-RL.resetEverything(myRobot)
+RL.resetEverything()
 ```
 
 ## SHOW CONFIGURATION
 
+The updated wrapper returns a simple robot configuration dictionary from `initializeRobot`.
+
 ```python
-myRobot.showMyRobotConfig()
+print(myRobot)
 ```
 
 Example:
 
 ```python
-myRobot.showMyRobotConfig()
+print(myRobot)
 ```
 
 ## DISPLAY
 
 ```python
-RL.displayMessage(myRobot, messageToDisplay)
+await RL.displayMessage(messageToDisplay)
 ```
 
 Example:
 
 ```python
-RL.displayMessage(myRobot, "Go")
+await RL.displayMessage("Go")
 ```
 
 ## MOVEMENT
@@ -80,29 +84,43 @@ RL.displayMessage(myRobot, "Go")
 Move forward or backward without gyro correction.
 
 ```python
-RL.moveForward(myRobot, rotations)
-RL.moveBackward(myRobot, rotations)
+await RL.moveForward(rotations)
+await RL.moveBackward(rotations)
 ```
 
 Examples:
 
 ```python
-RL.moveForward(myRobot, 1)
-RL.moveBackward(myRobot, 1)
+await RL.moveForward(1)
+await RL.moveBackward(1)
+```
+
+Optional movement settings can be supplied directly to the movement call.
+
+```python
+await RL.moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000)
+await RL.moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000)
 ```
 
 Move forward or backward with gyro correction.
 
 ```python
-RL.moveForwardGyro(myRobot, stoppingRotations)
-RL.moveBackwardGyro(myRobot, stoppingRotations)
+await RL.moveForwardGyro(stoppingRotations)
+await RL.moveBackwardGyro(stoppingRotations)
 ```
 
 Examples:
 
 ```python
-RL.moveForwardGyro(myRobot, 1)
-RL.moveBackwardGyro(myRobot, 1)
+await RL.moveForwardGyro(1)
+await RL.moveBackwardGyro(1)
+```
+
+Optional gyro movement settings can be supplied directly to the gyro movement call.
+
+```python
+await RL.moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+await RL.moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
 ```
 
 ## TURN
@@ -110,189 +128,247 @@ RL.moveBackwardGyro(myRobot, 1)
 Pivot turns move one wheel while the other wheel stays stopped.
 
 ```python
-RL.pivotTurnRight(myRobot, degreesToTurn)
-RL.pivotTurnLeft(myRobot, degreesToTurn)
+await RL.pivotTurnRight(degreesToTurn)
+await RL.pivotTurnLeft(degreesToTurn)
 ```
 
 Examples:
 
 ```python
-RL.pivotTurnRight(myRobot, 90)
-RL.pivotTurnLeft(myRobot, 90)
+await RL.pivotTurnRight(90)
+await RL.pivotTurnLeft(90)
 ```
 
 Spin turns move both wheels in opposite directions.
 
 ```python
-RL.spinTurnRight(myRobot, degreesToTurn)
-RL.spinTurnLeft(myRobot, degreesToTurn)
+await RL.spinTurnRight(degreesToTurn)
+await RL.spinTurnLeft(degreesToTurn)
 ```
 
 Examples:
 
 ```python
-RL.spinTurnRight(myRobot, 90)
-RL.spinTurnLeft(myRobot, 90)
+await RL.spinTurnRight(90)
+await RL.spinTurnLeft(90)
+```
+
+Proportional pivot turns slow down near the target angle for better accuracy.
+
+```python
+await RL.proportionalPivotTurnRight(degreesToTurn)
+await RL.proportionalPivotTurnLeft(degreesToTurn)
+```
+
+Examples:
+
+```python
+await RL.proportionalPivotTurnRight(90)
+await RL.proportionalPivotTurnLeft(90)
 ```
 
 Proportional spin turns slow down near the target angle for better accuracy.
 
 ```python
-RL.proportionalSpinTurnRight(myRobot, degreesToTurn)
-RL.proportionalSpinTurnLeft(myRobot, degreesToTurn)
+await RL.proportionalSpinTurnRight(degreesToTurn)
+await RL.proportionalSpinTurnLeft(degreesToTurn)
 ```
 
 Examples:
 
 ```python
-RL.proportionalSpinTurnRight(myRobot, 90)
-RL.proportionalSpinTurnLeft(myRobot, 90)
+await RL.proportionalSpinTurnRight(90)
+await RL.proportionalSpinTurnLeft(90)
+```
+
+Optional turn settings can be supplied directly to the turn call.
+
+```python
+await RL.pivotTurnRight(degreesToTurn, velocityPercentage=25)
+await RL.spinTurnRight(degreesToTurn, velocityPercentage=25)
+await RL.proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0)
+await RL.proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0)
 ```
 
 ## LINE DETECTION
 
-Move straight until either light sensor detects a black line.
+Move straight until either light sensor detects the requested line color.
 
 ```python
-triggeredSensorPort = RL.moveStraightUntilBlackLine(
-    myRobot,
+triggeredSensorPort = await RL.moveStraightUntilLine(
     leftLightSensorPort,
     rightLightSensorPort,
+    lineColor,
 )
 ```
 
 Example:
 
 ```python
-triggeredSensorPort = RL.moveStraightUntilBlackLine(
-    myRobot,
+triggeredSensorPort = await RL.moveStraightUntilLine(
     port.B,
     port.D,
+    color.BLACK,
 )
 ```
 
-Move straight until either light sensor detects a white line.
+Move straight until both light sensors detect the requested line color.
 
 ```python
-triggeredSensorPort = RL.moveStraightUntilWhiteLine(
-    myRobot,
+triggeredSensorPort = await RL.moveStraightUntilLine(
     leftLightSensorPort,
     rightLightSensorPort,
+    lineColor,
+    bothSensorsOnLine=True,
 )
 ```
 
 Example:
 
 ```python
-triggeredSensorPort = RL.moveStraightUntilWhiteLine(
-    myRobot,
+triggeredSensorPort = await RL.moveStraightUntilLine(
     port.B,
     port.D,
+    color.WHITE,
+    bothSensorsOnLine=True,
 )
+```
+
+After one light sensor is already on a line, move until the second light sensor reaches the same line color.
+
+```python
+await RL.getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor)
+```
+
+Example:
+
+```python
+await RL.getSecondLightSensorOnLine(port.B, port.D, color.BLACK)
+```
+
+Square up on a black line using two light sensors.
+
+```python
+await RL.squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort)
+```
+
+Example:
+
+```python
+await RL.squareUpOnBlackLine(port.B, port.D)
 ```
 
 ## CHANGE SETTINGS
 
-Change the main drive motor speed.
+Change the main drive motor speed by passing `velocityPercentage` to movement and turn functions.
 
 ```python
-myRobot.changeMainMotorVelocity(velocityPercent)
+await RL.moveForward(rotations, velocityPercentage=40)
+await RL.pivotTurnRight(degreesToTurn, velocityPercentage=40)
 ```
 
 Example:
 
 ```python
-myRobot.changeMainMotorVelocity(40)
+await RL.moveForward(1, velocityPercentage=40)
 ```
 
-Change the attachment motor speed.
+Change acceleration or deceleration by passing optional movement parameters.
 
 ```python
-myRobot.changeAttachMotorVelocity(velocityPercent)
-```
-
-Example:
-
-```python
-myRobot.changeAttachMotorVelocity(30)
-```
-
-Change the turn timeout used by proportional turn functions.
-
-```python
-myRobot.changeTimeout(timeout)
+await RL.moveForward(rotations, acceleration=500, deceleration=1000)
 ```
 
 Example:
 
 ```python
-myRobot.changeTimeout(3)
+await RL.moveForward(1, acceleration=500, deceleration=1000)
 ```
 
-Change the main drive motor ports.
+Change the proportional turn timeout by passing `timeout` to proportional turn functions.
 
 ```python
-myRobot.changeMainPorts(portLeft, portRight)
+await RL.proportionalSpinTurnRight(degreesToTurn, timeout=2.0)
 ```
 
 Example:
 
 ```python
-myRobot.changeMainPorts(port.A, port.E)
+await RL.proportionalSpinTurnRight(90, timeout=3)
+```
+
+Change the main drive motor ports when initializing the robot.
+
+```python
+myRobot = RL.initializeRobot(name, mainPortLeft, mainPortRight)
+```
+
+Example:
+
+```python
+myRobot = RL.initializeRobot("Pez", port.A, port.E)
 ```
 
 ## COMPLETE STARTER PROGRAM
 
 ```python
 from hub import port
+import runloop
 import Combined as RL
 
 
-def main():
+async def main():
     myRobot = RL.initializeRobot(
         name="Pez",
         mainPortLeft=port.A,
         mainPortRight=port.E,
     )
 
-    myRobot.showMyRobotConfig()
+    print(myRobot)
 
-    RL.displayMessage(myRobot, "Go")
+    await RL.displayMessage("Go")
 
-    RL.moveForward(myRobot, 1)
-    RL.pivotTurnRight(myRobot, 90)
-    RL.moveBackward(myRobot, 1)
+    await RL.moveForward(1)
+    await RL.pivotTurnRight(90)
+    await RL.moveBackward(1)
 
 
-main()
+runloop.run(main())
 ```
 
 ## IMPORTANT NOTES
 
-The end-user wrapper functions in `Combined.py` are synchronous.
+The end-user wrapper functions in `Combined.py` that control robot actions are asynchronous.
 
-Do not use `await` when calling these functions:
+Use `await` when calling these functions from an `async` function:
 
 ```python
-RL.moveForward(myRobot, 1)
-RL.pivotTurnRight(myRobot, 90)
-RL.moveForwardGyro(myRobot, 1)
+await RL.moveForward(1)
+await RL.pivotTurnRight(90)
+await RL.moveForwardGyro(1)
 ```
 
-Do not wrap the whole user program in `runloop.run(main())`.
+Run the whole user program with `runloop.run(main())`.
 
-Use normal function calls from a normal `main()` function:
+Use an async `main()` function:
 
 ```python
-def main():
+async def main():
     myRobot = RL.initializeRobot(
         name="Pez",
         mainPortLeft=port.A,
         mainPortRight=port.E,
     )
 
-    RL.moveForward(myRobot, 1)
+    await RL.moveForward(1)
 
 
-main()
+runloop.run(main())
+```
+
+`initializeRobot()` and `resetEverything()` are normal functions and do not use `await`.
+
+```python
+myRobot = RL.initializeRobot("Pez", port.A, port.E)
+RL.resetEverything()
 ```

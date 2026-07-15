@@ -1,522 +1,326 @@
 from hub import light_matrix, motion_sensor, port, sound
 import hub
 import runloop, motor, motor_pair, sys, time, color_sensor, color
-
 LARGE_MOTOR_MAX_VELOCITY = 1050
-MEDIUM_MOTOR_MAX_VELOCITY = 1110
-
 BLACK_LINE_LIGHT_REFLECTION = 50
 WHITE_LINE_LIGHT_REFLECTION = 95
-
-DEFAULT_VELOCITY_PERCENT = 25
-DEFAULT_TIMEOUT_SEC = 2
-
 LEFT_WHEEL_PORT = port.A
 RIGHT_WHEEL_PORT = port.E
-
-
-class RobotConfig:
-    def __init__(
-        self,
-        name: str,
-        mainPortLeft,
-        mainPortRight,
-        mainMotorVelocity: int = LARGE_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT / 100,
-        attachMotorVelocity: int = MEDIUM_MOTOR_MAX_VELOCITY * DEFAULT_VELOCITY_PERCENT / 100,
-        timeout: int = DEFAULT_TIMEOUT_SEC
-    ):
-        self.name = name
-        self.mainMotorVelocity = mainMotorVelocity
-        self.attachMotorVelocity = attachMotorVelocity
-        self.timeout = timeout
-        self.mainPortLeft = mainPortLeft
-        self.mainPortRight = mainPortRight
-
-    def showMyRobotConfig(self) -> None:
-        print("Motor Config for: ", self.name)
-        print("mainPortLeft: ", self.mainPortLeft)
-        print("mainPortRight: ", self.mainPortRight)
-        print("mainMotorVelocity: ", self.mainMotorVelocity)
-        print("attachMotorVelocity: ", self.attachMotorVelocity)
-        print("timeout: ", self.timeout)
-
-    def changeMainPorts(self, portLeft, portRight) -> None:
-        self.mainPortLeft = portLeft
-        self.mainPortRight = portRight
-        print("changeMainPorts: ports changed to: ", portLeft, ", ", portRight)
-
-    def changeMainMotorVelocity(self, velocityPercent: int) -> None:
-        if 10 <= velocityPercent <= 90:
-            self.mainMotorVelocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercent / 100
-            print("changeMainMotorVelocity: velocity updated to ", velocityPercent, "%")
-        else:
-            print("changeMainMotorVelocity: velocityPercent should be between 10 and 90")
-            print("Left Unchanged")
-
-    def getMainMotorVelocity(self) -> int:
-        return self.mainMotorVelocity
-
-    def changeAttachMotorVelocity(self, velocityPercent: int) -> None:
-        if 10 <= velocityPercent <= 90:
-            self.attachMotorVelocity = MEDIUM_MOTOR_MAX_VELOCITY * velocityPercent / 100
-            print("changeAttachMotorVelocity: velocity updated to ", velocityPercent, "%")
-        else:
-            print("changeAttachMotorVelocity: velocityPercent should be between 10 and 90")
-            print("Left Unchanged")
-
-    def getAttachMotorVelocity(self) -> int:
-        return self.attachMotorVelocity
-
-    def changeTimeout(self, timeout: int) -> None:
-        self.timeout = timeout
-        print("changeTimeout: timeout updated to ", timeout, " seconds")
-
-    def getTimeout(self) -> int:
-        return self.timeout
-
-
-def _velocityToPercent(velocity, maxVelocity) -> int:
-    return int(abs(velocity) * 100 / maxVelocity)
-
 
 def __turnCompleted(degreesToTurn) -> bool:
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
-
 async def _pivotTurn(degreesToTurn, velocity) -> None:
-    print("Pivot Turn")
-
+    print('Pivot Turn')
     motion_sensor.reset_yaw(0)
-
+    time.sleep(0.1)
     if degreesToTurn > 0:
-        motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), 0)
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity, 0)
     else:
-        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity))
-
+        motor_pair.move_tank(motor_pair.PAIR_1, 0, velocity)
     await runloop.until(lambda: __turnCompleted(degreesToTurn))
     motor_pair.stop(motor_pair.PAIR_1)
-
-    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
-
+    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    return
 
 async def _spinTurn(degreesToTurn, velocity) -> None:
-    print("Spin Turn")
-
+    print('Spin Turn')
     motion_sensor.reset_yaw(0)
-
+    time.sleep(0.1)
     if degreesToTurn > 0:
-        motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), -1 * int(velocity))
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity, -1 * velocity)
     else:
-        motor_pair.move_tank(motor_pair.PAIR_1, -1 * int(velocity), int(velocity))
-
+        motor_pair.move_tank(motor_pair.PAIR_1, -1 * velocity, velocity)
     await runloop.until(lambda: __turnCompleted(degreesToTurn))
     motor_pair.stop(motor_pair.PAIR_1)
-
-    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
-
+    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    return
 
 async def _proportionalPivotTurn(degreesToTurn, velocityPercentage=40, timeout=2.0) -> None:
-    print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
-
+    print('Proportional Pivot Turn. DegreesToTurn = ' + str(degreesToTurn) + '. velocityPercentage = ' + str(velocityPercentage) + ', timeout(seconds) = ' + str(timeout))
     motion_sensor.reset_yaw(0)
-
+    time.sleep(0.1)
     startTime = time.ticks_ms()
-    print("Start time: ", startTime)
-
+    print('Start time: ', startTime)
     while time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000:
         if degreesToTurn > 0:
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
-
         turnPower = turnError * velocityPercentage / 100 * LARGE_MOTOR_MAX_VELOCITY / 40
-
         if degreesToTurn > 0:
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0)
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, 0, int(turnPower))
-
         if __turnCompleted(degreesToTurn):
-            print("Turn completed!")
+            print('Turn completed!')
             break
-
+    print('Time out!')
     motor_pair.stop(motor_pair.PAIR_1)
-
-    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
-
+    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    return
 
 async def _proportionalSpinTurn(degreesToTurn, velocityPercentage=30, timeout=2.0) -> None:
-    print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
-
+    print('Proportional Spin Turn. DegreesToTurn = ' + str(degreesToTurn) + '. velocityPercentage = ' + str(velocityPercentage) + ', timeout(seconds) = ' + str(timeout))
     motion_sensor.reset_yaw(0)
-
+    time.sleep(0.1)
     startTime = time.ticks_ms()
-    print("Start time: ", startTime)
-
+    print('Start time: ', startTime)
     while time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000:
         if degreesToTurn > 0:
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
-
         turnPower = turnError * velocityPercentage / 100 * LARGE_MOTOR_MAX_VELOCITY / 50
-
         if degreesToTurn > 0:
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1 * int(turnPower))
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, -1 * int(turnPower), int(turnPower))
-
         if __turnCompleted(degreesToTurn):
-            print("Turn completed!")
+            print('Turn completed!')
             break
-
     motor_pair.stop(motor_pair.PAIR_1)
-
-    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
-
+    print('Time out!')
+    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    return
 
 async def _moveForward(stoppingRotations, velocityPercentage, acceleration=500, deceleration=1000) -> None:
-    print("In moveForward function, rotations to move = " + str(stoppingRotations) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ", deceleration = " + str(deceleration) + ".")
-
+    print('In moveForward function, rotations to move = ' + str(stoppingRotations) + ', velocityPercentage = ' + str(velocityPercentage) + ', acceleration = ' + str(acceleration) + ', deceleration = ' + str(deceleration) + '.')
     degreesToMove = stoppingRotations * 360
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100
-
-    await motor_pair.move_for_degrees(
-        motor_pair.PAIR_1,
-        int(degreesToMove),
-        0,
-        velocity=int(velocity),
-        stop=motor.BRAKE,
-        acceleration=acceleration,
-        deceleration=deceleration
-    )
-
+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, degreesToMove, 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
+    return
 
 async def __moveForwardProporational(rotations, velocity, acceleration=500, brakeStartPercentage=0.9, correctionMultiplier=-1.5) -> None:
-    print("Move Forward Proportional. Rotations = " + str(rotations) + ", Velocity = " + str(velocity) + ", Acceleration = " + str(acceleration) + ", Brake = " + str(brakeStartPercentage) + ", Correction Multiplier = " + str(correctionMultiplier))
-
+    print('Move Forward Proportional. Rotations = ' + str(rotations) + ', Velocity = ' + str(velocity) + ', Acceleration = ' + str(acceleration) + ', Brake = ' + str(brakeStartPercentage) + ', Correction Multiplier = ' + str(correctionMultiplier))
     motion_sensor.reset_yaw(0)
-
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0)
     brakeStartDistance = degrees * brakeStartPercentage
     endSpeed = LARGE_MOTOR_MAX_VELOCITY * 0.1
-
     while motor.relative_position(RIGHT_WHEEL_PORT) < degrees:
         error = motion_sensor.tilt_angles()[0] * -0.1
         correction = int(error * correctionMultiplier)
-
         deceleration = 0
         degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
-
         if degreesTraveled > brakeStartDistance:
             deceleration = min(velocity * degreesTraveled / degrees, velocity - endSpeed)
-
-        motor_pair.move_tank(
-            motor_pair.PAIR_1,
-            velocity + correction - int(deceleration),
-            velocity - correction - int(deceleration),
-            acceleration=acceleration
-        )
-
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction - int(deceleration), velocity - correction - int(deceleration), acceleration=acceleration)
     motor_pair.stop(motor_pair.PAIR_1)
-    print("Final relative position = " + str(motor.relative_position(RIGHT_WHEEL_PORT)))
-
+    print('Final relative position = ' + str(motor.relative_position(RIGHT_WHEEL_PORT)))
+    return
 
 async def __moveBackwardProporational(rotations, velocity, acceleration=500, brakeStartPercentage=0.9, correctionMultiplier=-3.5) -> None:
-    print("Move Backward Proportional. Rotations = " + str(rotations) + ", Velocity = " + str(velocity) + ", Acceleration = " + str(acceleration) + ", Brake = " + str(brakeStartPercentage) + ", Correction Multiplier = " + str(correctionMultiplier))
-
+    print('Move Backward Proportional. Rotations = ' + str(rotations) + ', Velocity = ' + str(velocity) + ', Acceleration = ' + str(acceleration) + ', Brake = ' + str(brakeStartPercentage) + ', Correction Multiplier = ' + str(correctionMultiplier))
     motion_sensor.reset_yaw(0)
-
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0)
     brakeStartDistance = degrees * brakeStartPercentage
     endSpeed = LARGE_MOTOR_MAX_VELOCITY * 0.1
-
     while motor.relative_position(RIGHT_WHEEL_PORT) > degrees:
         error = motion_sensor.tilt_angles()[0] * -0.1
         correction = int(error * correctionMultiplier)
-
         deceleration = 0
         degreesTraveled = motor.relative_position(RIGHT_WHEEL_PORT)
-
         if degreesTraveled < brakeStartDistance:
             deceleration = max(velocity * degreesTraveled / degrees, velocity + endSpeed)
-
-        motor_pair.move_tank(
-            motor_pair.PAIR_1,
-            velocity + correction - int(deceleration),
-            velocity - correction - int(deceleration),
-            acceleration=acceleration
-        )
-
+        motor_pair.move_tank(motor_pair.PAIR_1, velocity + correction - int(deceleration), velocity - correction - int(deceleration), acceleration=acceleration)
     motor_pair.stop(motor_pair.PAIR_1)
-    print("Final relative position = " + str(motor.relative_position(RIGHT_WHEEL_PORT)))
-
+    print('Final relative position = ' + str(motor.relative_position(RIGHT_WHEEL_PORT)))
+    return
 
 async def _moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5) -> None:
-    print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage) + ", Acceleration = " + str(acceleration) + ", Brake Start Value = " + str(brakeStartValue) + ", Correction Multiplier = " + str(correctionMultiplier) + ".")
-
+    print('MoveStraightWheelRotations. Stopping Rotations =' + str(stoppingRotations) + '. Velocity % = ' + str(velocityPercentage) + ', Acceleration = ' + str(acceleration) + ', Brake Start Value = ' + str(brakeStartValue) + ', Correction Multiplier = ' + str(correctionMultiplier) + '.')
     velocity = LARGE_MOTOR_MAX_VELOCITY * abs(velocityPercentage) / 100
-
     if stoppingRotations > 0:
         await __moveForwardProporational(stoppingRotations, int(velocity), acceleration, brakeStartValue, correctionMultiplier)
     else:
         await __moveBackwardProporational(stoppingRotations, int(velocity * -1), acceleration, brakeStartValue, correctionMultiplier)
+    return
 
+def __blackLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine) -> bool:
+    if bothSensorsOnLine:
+        return color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION and color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION
+    else:
+        return color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION
 
-def __blackLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
-    return color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION
+def __whiteLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine) -> bool:
+    if bothSensorsOnLine:
+        return color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION and color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION
+    else:
+        return color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION
 
-
-def __whiteLineFound(leftLightSensorPort, rightLightSensorPort) -> bool:
-    return color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION or color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION
-
-
-async def _moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> int:
-    print("In moveStraightUntilLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + str(lineColor) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
-
+async def _moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500) -> int:
+    print('In moveStraightUntilLine function, left light sensor port = ' + str(leftLightSensorPort) + ', right light sensor port = ' + str(rightLightSensorPort) + ', line color = ' + str(lineColor) + ', velocityPercentage = ' + str(velocityPercentage) + ', acceleration = ' + str(acceleration) + '.')
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100
     motor_pair.move(motor_pair.PAIR_1, 0, velocity=int(velocity), acceleration=acceleration)
-
     triggeredSensorPort = -1
-
     if lineColor == color.BLACK:
-        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort))
-
+        await runloop.until(lambda: __blackLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine))
         if color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION:
-            print("Left light sensor found black line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
             triggeredSensorPort = leftLightSensorPort
         else:
-            print("Right light sensor found black line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
             triggeredSensorPort = rightLightSensorPort
-
     elif lineColor == color.WHITE:
-        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort))
-
+        await runloop.until(lambda: __whiteLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLine))
         if color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION:
-            print("Left light sensor found white line. Reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
             triggeredSensorPort = leftLightSensorPort
         else:
-            print("Right light sensor found white line. Reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
             triggeredSensorPort = rightLightSensorPort
-
     else:
-        print("Line color of " + str(lineColor) + " is invalid.")
-
+        print('Line color of ' + str(lineColor) + ' is invalid.')
     motor_pair.stop(motor_pair.PAIR_1)
+    print('Triggered Sensor Port = ', triggeredSensorPort)
+    print('Left light sensor reflection = ' + str(color_sensor.reflection(leftLightSensorPort)))
+    print('Right light sensor reflection = ' + str(color_sensor.reflection(rightLightSensorPort)))
     return triggeredSensorPort
 
-
 async def _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> None:
-    print("In getSecondLightSensorOnLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + str(lineColor) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
-
+    print('In getSecondLightSensorOnLine function, left light sensor port = ' + str(leftLightSensorPort) + ', right light sensor port = ' + str(rightLightSensorPort) + ', line color = ' + str(lineColor) + ', velocityPercentage = ' + str(velocityPercentage) + ', acceleration = ' + str(acceleration) + '.')
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100
-
     if lineColor == color.BLACK:
         if color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION:
-            print("Before movement, left light sensor on black line = ", color_sensor.reflection(leftLightSensorPort))
+            print('Before movement, left light sensor on black line = ', color_sensor.reflection(leftLightSensorPort))
             motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
             await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
         else:
-            print("Before movement, left light sensor NOT on black = ", color_sensor.reflection(leftLightSensorPort))
+            print('Before movement, left light sensor NOT on black = ', color_sensor.reflection(leftLightSensorPort))
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), 0, acceleration=acceleration)
             await runloop.until(lambda: color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
     elif lineColor == color.WHITE:
         if color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION:
-            print("Before movement, left light sensor on white line = ", color_sensor.reflection(leftLightSensorPort))
+            print('Before movement, left light sensor on white line = ', color_sensor.reflection(leftLightSensorPort))
             motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
             await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
         else:
-            print("Before movement, left light sensor NOT on white line = ", color_sensor.reflection(leftLightSensorPort))
+            print('Before movement, left light sensor NOT on white line = ', color_sensor.reflection(leftLightSensorPort))
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity), 0, acceleration=acceleration)
             await runloop.until(lambda: color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION)
     else:
-        print("Line color of " + str(lineColor) + " is invalid.")
-
+        print('Line color of ' + str(lineColor) + ' is invalid.')
     motor_pair.stop(motor_pair.PAIR_1)
-    print("Left light sensor reflection = " + str(color_sensor.reflection(leftLightSensorPort)))
-    print("Right light sensor reflection = " + str(color_sensor.reflection(rightLightSensorPort)))
+    print('Left light sensor reflection = ' + str(color_sensor.reflection(leftLightSensorPort)))
+    print('Right light sensor reflection = ' + str(color_sensor.reflection(rightLightSensorPort)))
+    return
 
-
-def _allSensorReset() -> None:
-    motion_sensor.reset_yaw(0)
-
-
-def moveBackward(myConfig: RobotConfig, rotations):
-    if isinstance(rotations, (int, float)):
-        runloop.run(_moveForward(
-            -1 * rotations,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-        ))
+async def _squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst=True, velocityPercentage=10, acceleration=500) -> None:
+    print('In squareUpOnBlackLine function, left light sensor port = ' + str(leftLightSensorPort) + ', right light sensor port = ' + str(rightLightSensorPort) + ', leftMoveFirst = ' + str(leftMoveFirst) + ', velocityPercentage = ' + str(velocityPercentage) + ', acceleration = ' + str(acceleration) + '.')
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100
+    if leftMoveFirst:
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
+        time.sleep(0.1)
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
     else:
-        print("moveBackward: rotations must be a number")
+        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(-1 * velocity), acceleration=acceleration)
+        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) > BLACK_LINE_LIGHT_REFLECTION)
+        motor_pair.stop(motor_pair.PAIR_1)
+        time.sleep(0.1)
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
+        time.sleep(0.1)
+        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
+        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
+        motor_pair.stop(motor_pair.PAIR_1)
+        time.sleep(0.1)
+        await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
+    return
 
 
-def moveForward(myConfig: RobotConfig, rotations):
-    if isinstance(rotations, (int, float)):
-        runloop.run(_moveForward(
-            rotations,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-        ))
-    else:
-        print("moveForward: rotations must be a number")
+def __velocity(velocityPercentage):
+    return int(LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
 
 
-def displayMessage(myConfig: RobotConfig, messageToDisplay):
+async def moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
+    await _moveForward(-1 * rotations, velocityPercentage, acceleration, deceleration)
+    return
+
+
+async def moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
+    await _moveForward(rotations, velocityPercentage, acceleration, deceleration)
+    return
+
+
+async def displayMessage(messageToDisplay):
     light_matrix.write(str(messageToDisplay))
+    return
 
 
-def pivotTurnRight(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_pivotTurn(degreesToTurn, myConfig.getMainMotorVelocity()))
-    else:
-        print("pivotTurnRight: degreesToTurn must be a number")
+async def pivotTurnRight(degreesToTurn, velocityPercentage=25):
+    await _pivotTurn(degreesToTurn, __velocity(velocityPercentage))
+    return
 
 
-def pivotTurnLeft(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_pivotTurn(-1 * degreesToTurn, myConfig.getMainMotorVelocity()))
-    else:
-        print("pivotTurnLeft: degreesToTurn must be a number")
+async def pivotTurnLeft(degreesToTurn, velocityPercentage=25):
+    await _pivotTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
+    return
 
 
-def spinTurnRight(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_spinTurn(degreesToTurn, myConfig.getMainMotorVelocity()))
-    else:
-        print("spinTurnRight: degreesToTurn must be a number")
+async def spinTurnRight(degreesToTurn, velocityPercentage=25):
+    await _spinTurn(degreesToTurn, __velocity(velocityPercentage))
+    return
 
 
-def spinTurnLeft(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_spinTurn(-1 * degreesToTurn, myConfig.getMainMotorVelocity()))
-    else:
-        print("spinTurnLeft: degreesToTurn must be a number")
+async def spinTurnLeft(degreesToTurn, velocityPercentage=25):
+    await _spinTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
+    return
 
 
-def proportionalSpinTurnLeft(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_proportionalSpinTurn(
-            -1 * degreesToTurn,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY),
-            myConfig.getTimeout()
-        ))
-    else:
-        print("proportionalSpinTurnLeft: degreesToTurn must be a number")
+async def proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await _proportionalPivotTurn(degreesToTurn, velocityPercentage, timeout)
+    return
 
 
-def proportionalSpinTurnRight(myConfig: RobotConfig, degreesToTurn):
-    if isinstance(degreesToTurn, int):
-        runloop.run(_proportionalSpinTurn(
-            degreesToTurn,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY),
-            myConfig.getTimeout()
-        ))
-    else:
-        print("proportionalSpinTurnRight: degreesToTurn must be a number")
+async def proportionalPivotTurnLeft(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await _proportionalPivotTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+    return
 
 
-def moveForwardGyro(myConfig: RobotConfig, stoppingRotations):
-    if isinstance(stoppingRotations, (int, float)):
-        runloop.run(_moveStraightWheelRotation(
-            stoppingRotations,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-        ))
-    else:
-        print("moveForwardGyro: stoppingRotations must be a number")
+async def proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await _proportionalSpinTurn(degreesToTurn, velocityPercentage, timeout)
+    return
 
 
-def moveBackwardGyro(myConfig: RobotConfig, stoppingRotations):
-    if isinstance(stoppingRotations, (int, float)):
-        runloop.run(_moveStraightWheelRotation(
-            -1 * stoppingRotations,
-            _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-        ))
-    else:
-        print("moveBackwardGyro: stoppingRotations must be a number")
+async def proportionalSpinTurnLeft(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await _proportionalSpinTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+    return
 
 
-def moveStraightUntilBlackLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort):
-    return runloop.run(_moveStraightUntilLine(
-        leftLightSensorPort,
-        rightLightSensorPort,
-        color.BLACK,
-        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-    ))
+async def moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
+    await _moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
+    return
 
 
-def moveStraightUntilWhiteLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort):
-    return runloop.run(_moveStraightUntilLine(
-        leftLightSensorPort,
-        rightLightSensorPort,
-        color.WHITE,
-        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-    ))
+async def moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
+    await _moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
+    return
 
 
-def getSecondLightSensorOnBlackLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort):
-    runloop.run(_getSecondLightSensorOnLine(
-        leftLightSensorPort,
-        rightLightSensorPort,
-        color.BLACK,
-        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-    ))
+async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500):
+    return await _moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine, velocityPercentage, acceleration)
 
 
-def getSecondLightSensorOnWhiteLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort):
-    runloop.run(_getSecondLightSensorOnLine(
-        leftLightSensorPort,
-        rightLightSensorPort,
-        color.WHITE,
-        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-    ))
+async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500):
+    await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
+    return
 
 
-def getSecondLightSensorOnLine(myConfig: RobotConfig, leftLightSensorPort, rightLightSensorPort, lineColor):
-    runloop.run(_getSecondLightSensorOnLine(
-        leftLightSensorPort,
-        rightLightSensorPort,
-        lineColor,
-        _velocityToPercent(myConfig.getMainMotorVelocity(), LARGE_MOTOR_MAX_VELOCITY)
-    ))
+async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst=True, velocityPercentage=10, acceleration=500):
+    await _squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst, velocityPercentage, acceleration)
+    return
 
 
-def resetEverything(myConfig: RobotConfig):
-    _allSensorReset()
-
-    newConfig = RobotConfig(
-        myConfig.name,
-        mainPortLeft=myConfig.mainPortLeft,
-        mainPortRight=myConfig.mainPortRight
-    )
-
-    myConfig.mainMotorVelocity = newConfig.getMainMotorVelocity()
-    myConfig.attachMotorVelocity = newConfig.getAttachMotorVelocity()
-    myConfig.timeout = newConfig.getTimeout()
-
+def resetEverything():
+    motion_sensor.reset_yaw(0)
+    motor.reset_relative_position(LEFT_WHEEL_PORT, 0)
+    motor.reset_relative_position(RIGHT_WHEEL_PORT, 0)
     print("resetEverything: Complete")
+    return
 
 
-def initializeRobot(
-    name: str,
-    mainPortLeft,
-    mainPortRight
-) -> RobotConfig:
-    newConfig = RobotConfig(
-        name=name,
-        mainPortLeft=mainPortLeft,
-        mainPortRight=mainPortRight
-    )
-
-    _allSensorReset()
-
-    motor_pair.pair(
-        motor_pair.PAIR_1,
-        newConfig.mainPortLeft,
-        newConfig.mainPortRight
-    )
-
+def initializeRobot(name: str, mainPortLeft=LEFT_WHEEL_PORT, mainPortRight=RIGHT_WHEEL_PORT):
+    motor_pair.pair(motor_pair.PAIR_1, mainPortLeft, mainPortRight)
     print("initializeRobot: Complete")
-
-    return newConfig
+    return {"name": name, "mainPortLeft": mainPortLeft, "mainPortRight": mainPortRight}

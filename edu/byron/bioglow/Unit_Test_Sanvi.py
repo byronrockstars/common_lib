@@ -1,16 +1,72 @@
-12345678910111213141516
-from hub import portimport Combined as RLdef main():    Pez = RL.initializeRobot(        name="Pez",        mainPortLeft=port.A,        mainPortRight=port.E,    )    ## Sanvi's code begin    Pez.changeMainMotorVelocity(50)    RL.moveForward(Pez, 1)    ## Sanvi's code end
-
-    ## Sanvi's code begin
-    Pez.changeMainMotorVelocity(50)
-    RL.moveForward(Pez, 1)
-    ## Sanvi's code end
+from hub import port
+import runloop
+import color
+import rockstar_wrapper as RW
 
 
+async def main():
+    # One simple active wrapper call.
+    # This is safe to run because it only writes to the light matrix.
+    await RW.displayMessage("Hi")
 
-# myRobot.showMyRobotConfig()
+    # ------------------------------------------------------------
+    # Optional rockstar_wrapper calls
+    # Uncomment the call you want to test.
+    # For movement functions, also uncomment initializeRobot first.
+    # ------------------------------------------------------------
+
+    # robot = RW.initializeRobot(
+    #     name="Pez",
+    #     mainPortLeft=port.A,
+    #     mainPortRight=port.E,
+    # )
+
+    # RW.resetEverything()
+
+    # velocity = RW.__velocity(25)  # Private helper; usually do not call directly.
+
+    # await RW.moveForward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.moveBackward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
+
+    # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)
+    # await RW.pivotTurnLeft(degreesToTurn=90, velocityPercentage=25)
+
+    # await RW.spinTurnRight(degreesToTurn=90, velocityPercentage=25)
+    # await RW.spinTurnLeft(degreesToTurn=90, velocityPercentage=25)
+
+    # await RW.proportionalPivotTurnRight(degreesToTurn=90, velocityPercentage=40, timeout=2.0)
+    # await RW.proportionalPivotTurnLeft(degreesToTurn=90, velocityPercentage=40, timeout=2.0)
+
+    # await RW.proportionalSpinTurnRight(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
+    # await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
+
+    # await RW.moveForwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    # await RW.moveBackwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+
+    # await RW.moveStraightUntilLine(
+    #     leftLightSensorPort=port.C,
+    #     rightLightSensorPort=port.D,
+    #     lineColor=color.BLACK,
+    #     bothSensorsOnLine=False,
+    #     velocityPercentage=25,
+    #     acceleration=500,
+    # )
+
+    # await RW.getSecondLightSensorOnLine(
+    #     leftLightSensorPort=port.C,
+    #     rightLightSensorPort=port.D,
+    #     lineColor=color.BLACK,
+    #     velocityPercentage=25,
+    #     acceleration=500,
+    # )
+
+    # await RW.squareUpOnBlackLine(
+    #     leftLightSensorPort=port.C,
+    #     rightLightSensorPort=port.D,
+    #     leftMoveFirst=True,
+    #     velocityPercentage=10,
+    #     acceleration=500,
+    # )
 
 
-(variable) Pez: Unknown
-Getting Started
-API Modules
+runloop.run(main())

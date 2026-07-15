@@ -1,13 +1,12 @@
 from hub import port
 import runloop
 import color
-import rockstar_wrapper as RW
+import Combined as RW
 
 
 async def main():
     # One simple active wrapper call.
     # This is safe to run because it only writes to the light matrix.
-    await RW.displayMessage("Hi")
 
     # ------------------------------------------------------------
     # Optional rockstar_wrapper calls
@@ -15,16 +14,16 @@ async def main():
     # For movement functions, also uncomment initializeRobot first.
     # ------------------------------------------------------------
 
-    # robot = RW.initializeRobot(
-    #     name="Pez",
-    #     mainPortLeft=port.A,
-    #     mainPortRight=port.E,
-    # )
+    robot = RW.initializeRobot(
+        name="Pez",
+        mainPortLeft=port.A,
+        mainPortRight=port.E,
+    )
 
     # RW.resetEverything()
 
-    # velocity = RW.__velocity(25)  # Private helper; usually do not call directly.
-
+    # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
+    await RW.displayMessage("Hi")
     # await RW.moveForward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
     # await RW.moveBackward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
 
@@ -44,28 +43,28 @@ async def main():
     # await RW.moveBackwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
 
     # await RW.moveStraightUntilLine(
-    #     leftLightSensorPort=port.C,
-    #     rightLightSensorPort=port.D,
-    #     lineColor=color.BLACK,
-    #     bothSensorsOnLine=False,
-    #     velocityPercentage=25,
-    #     acceleration=500,
+    #    leftLightSensorPort=port.C,
+    #    rightLightSensorPort=port.D,
+    #    lineColor=color.BLACK,
+    #    bothSensorsOnLine=False,
+    #    velocityPercentage=25,
+    #    acceleration=500,
     # )
 
     # await RW.getSecondLightSensorOnLine(
-    #     leftLightSensorPort=port.C,
-    #     rightLightSensorPort=port.D,
-    #     lineColor=color.BLACK,
-    #     velocityPercentage=25,
-    #     acceleration=500,
+    #    leftLightSensorPort=port.C,
+    #    rightLightSensorPort=port.D,
+    #    lineColor=color.BLACK,
+    #    velocityPercentage=25,
+    #    acceleration=500,
     # )
 
     # await RW.squareUpOnBlackLine(
-    #     leftLightSensorPort=port.C,
-    #     rightLightSensorPort=port.D,
-    #     leftMoveFirst=True,
-    #     velocityPercentage=10,
-    #     acceleration=500,
+    #    leftLightSensorPort=port.C,
+    #    rightLightSensorPort=port.D,
+    #    leftMoveFirst=True,
+    #    velocityPercentage=10,
+    #    acceleration=500,
     # )
 
 

@@ -23,8 +23,8 @@ async def main():
     # RW.resetEverything()
 
     # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
-    # await RW.displayMessage("I like donuts :)")
-    # await RW.moveForward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.displayMessage("hiiiiiiiiiiiiiiiiiiiiiiiii :)")
+    await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
     # await RW.moveBackward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
 
     # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)

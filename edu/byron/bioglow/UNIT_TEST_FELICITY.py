@@ -22,11 +22,13 @@ async def main():
 
     # RW.resetEverything()
 
-    # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
-    # await RW.displayMessage("hiiiiiiiiiiiiiiiiiiiiiiiii :)")
+    # velocity = RW.__velocity(25)# Private helper; usually do not call directly. 
+    
+    await RW.moveBackward(rotations=5, velocityPercentage=25, acceleration=500, deceleration=1000)
+    await RW.displayMessage("DONE")
     await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
-    # await RW.moveBackward(rotations=1, velocityPercentage=25, acceleration=500, deceleration=1000)
-
+ 
+8
     # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)
     # await RW.pivotTurnLeft(degreesToTurn=90, velocityPercentage=25)
 

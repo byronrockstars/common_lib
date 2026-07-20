@@ -20,13 +20,20 @@ async def main():
         mainPortRight=port.E,
     )
 
-    # RW.resetEverything()
+    # RW.resetEverything
 
-    # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
-    await RW.moveBackward(rotations=6, velocityPercentage=25, acceleration=500, deceleration=1000)
-    await RW.moveForward(rotations=2, velocityPercentage=25, acceleration=500, deceleration=1000)
-    await RW.displayMessage("pancakes:)")
+    # velocity = RW.__velocity(25)# Private helper; usually do not call directly. 
+    
+  
+   # await RW.moveBackward(rotations=5, velocityPercentage=25, acceleration=500, deceleration=1000)
+    await RW.displayMessage("start")
+    await RW.moveForwardGyro(stoppingRotations=3.5, velocityPercentage=50, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    await RW.moveBackwardGyro(stoppingRotations=2, velocityPercentage=50, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    await RW.displayMessage("DONE")
 
+  #  await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
+ 
+8
     # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)
     # await RW.pivotTurnLeft(degreesToTurn=90, velocityPercentage=25)
 

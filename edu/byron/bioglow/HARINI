@@ -22,13 +22,11 @@ async def main():
 
     # RW.resetEverything()
 
-    # velocity = RW.__velocity(25)# Private helper; usually do not call directly. 
-    
-    await RW.moveBackward(rotations=5, velocityPercentage=25, acceleration=500, deceleration=1000)
-    await RW.displayMessage("DONE")
-    await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
- 
-8
+    # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
+    # await RW.moveBackward(rotations=6, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.moveForward(rotations=2, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.displayMessage("pancakes:)")
+
     # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)
     # await RW.pivotTurnLeft(degreesToTurn=90, velocityPercentage=25)
 
@@ -41,8 +39,9 @@ async def main():
     # await RW.proportionalSpinTurnRight(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
     # await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
 
-    # await RW.moveForwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
-    # await RW.moveBackwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    await RW.displayMessage("done:)")
+    await RW.moveBackwardGyro(stoppingRotations=4, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
 
     # await RW.moveStraightUntilLine(
     #    leftLightSensorPort=port.C,

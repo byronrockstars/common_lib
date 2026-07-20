@@ -24,8 +24,8 @@ async def main():
 
     # velocity = RW.__velocity(25)# Private helper; usually do not call directly.
     # await RW.displayMessage("I like donuts :)")
-    await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
-    await RW.moveBackward(rotations=5, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.moveForward(rotations=3, velocityPercentage=25, acceleration=500, deceleration=1000)
+    # await RW.moveBackward(rotations=5, velocityPercentage=25, acceleration=500, deceleration=1000)
 
     # await RW.pivotTurnRight(degreesToTurn=90, velocityPercentage=25)
     # await RW.pivotTurnLeft(degreesToTurn=90, velocityPercentage=25)
@@ -38,12 +38,23 @@ async def main():
 
     # await RW.proportionalSpinTurnRight(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
     # await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
+    direction = "b"
 
-    # await RW.moveForwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
-    # await RW.moveBackwardGyro(stoppingRotations=1, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    if direction == "f":
+        await RW.displayMessage("fwrd")
+        await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    elif direction == "b":
+        await RW.displayMessage("bwrd")
+        await RW.moveBackwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    else:
+        # Error handling for typos
+        await RW.displayMessage("ERROR!")
 
+    # await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    # await RW.moveBackwardGyro(stoppingRotations=2, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    # await RW.displayMessage("PANCAKEVILLE :)")
     # await RW.moveStraightUntilLine(
-    #    leftLightSensorPort=port.C,
+#    leftLightSensorPort=port.C,
     #    rightLightSensorPort=port.D,
     #    lineColor=color.BLACK,
     #    bothSensorsOnLine=False,

@@ -2,11 +2,14 @@ from hub import light_matrix, motion_sensor, port, sound
 import hub
 import runloop, motor, motor_pair, sys, time, color_sensor, color
 
-LARGE_MOTOR_MAX_VELOCITY = 1050
+#LARGE_MOTOR_MAX_VELOCITY = 1050
+LARGE_MOTOR_MAX_VELOCITY = 1110 #this is actually a medium motor being used to power the wheels
 BLACK_LINE_LIGHT_REFLECTION = 50
 WHITE_LINE_LIGHT_REFLECTION = 95
 LEFT_WHEEL_PORT = port.A
 RIGHT_WHEEL_PORT = port.E
+BLACK_LINE_RIGHT_EDGE = "Right"
+BLACK_LINE_LEFT_EDGE = "Left"
 
 
 #Returns true if the gyro yaw angle has reached the degreesToTurn value indicating that a turn has been completed.
@@ -409,3 +412,28 @@ async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMov
         await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
 
     return
+
+
+#Follows black line using the light sensor.
+#Input parameters:  lightSensorPort: port where light sensor to use for following black line is connected (ex. port.B)
+#                   midPointReflectionPercentage: Average of white and black reflection readings (in percentage) from the light sensor on the board.
+#                   edgeToFollow: whether to follow the black line on the left (BLACK_LINE_LEFT_EDGE) or right (BLACK_LINE_RIGHT_EDGE)
+#                   correctionCoef: value between 0 and 1 that determines how aggressively to make corrections to movement
+#                   velocityPercentage (optional): 0% to 100%.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+async def proportionalBlackLineFollow(lightSensorPort, midPointReflectionPercentage, edgeToFollow, correctionCoef=0.4, velocityPercentage=10, acceleration=500) -> None:
+    print("In proportionalBlackLineFollow function, lightSensorPort = " + str(lightSensorPort) + ", midPointReflectionPercentage = " + str(midPointReflectionPercentage) + 
+            ", edgeToFollow = " + str(edgeToFollow) + ", correctionCoef = " + str(correctionCoef) + ", velocityPercentage = " + str(velocityPercentage) + 
+            ", acceleration = " + str(acceleration) + ".")
+
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+
+    #TODO: add stopping condition    
+    while(1):
+        turnCorrectionPercentage = correctionCoef * (midPointReflectionPercentage - color_sensor.reflection(lightSensorPort))
+        turnCorrectionAmount = LARGE_MOTOR_MAX_VELOCITY * turnCorrectionPercentage/100
+        
+        if(edgeToFollow == BLACK_LINE_RIGHT_EDGE):
+            motor_pair.move_tank(motor_pair.PAIR_1, int(velocity + turnCorrectionAmount), int(velocity - turnCorrectionAmount), acceleration=acceleration)
+        else:
+            motor_pair.move_tank(motor_pair.PAIR_1, int(velocity - turnCorrectionAmount), int(velocity + turnCorrectionAmount), acceleration=acceleration)

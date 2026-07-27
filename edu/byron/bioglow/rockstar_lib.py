@@ -414,22 +414,25 @@ async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMov
     return
 
 
-#Follows black line using the light sensor.
-#Input parameters:  lightSensorPort: port where light sensor to use for following black line is connected (ex. port.B)
+#Follows black line using the light sensor for number of rotations. Meant to be used for forward movement only currently.
+#Input parameters:  rotationsToMove: Number of rotations to move while following line.
+#                   lightSensorPort: port where light sensor to use for following black line is connected (ex. port.B)
 #                   midPointReflectionPercentage: Average of white and black reflection readings (in percentage) from the light sensor on the board.
 #                   edgeToFollow: whether to follow the black line on the left (BLACK_LINE_LEFT_EDGE) or right (BLACK_LINE_RIGHT_EDGE)
 #                   correctionCoef: value between 0 and 1 that determines how aggressively to make corrections to movement
 #                   velocityPercentage (optional): 0% to 100%.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
-async def proportionalBlackLineFollow(lightSensorPort, midPointReflectionPercentage, edgeToFollow, correctionCoef=0.4, velocityPercentage=10, acceleration=500) -> None:
-    print("In proportionalBlackLineFollow function, lightSensorPort = " + str(lightSensorPort) + ", midPointReflectionPercentage = " + str(midPointReflectionPercentage) + 
+async def proportionalBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, correctionCoef=0.4, velocityPercentage=10, acceleration=500) -> None:
+    print("In proportionalBlackLineFollow function, rotationsToMove = " + str(rotationsToMove) + ", lightSensorPort = " + str(lightSensorPort) + ", midPointReflectionPercentage = " + str(midPointReflectionPercentage) + 
             ", edgeToFollow = " + str(edgeToFollow) + ", correctionCoef = " + str(correctionCoef) + ", velocityPercentage = " + str(velocityPercentage) + 
             ", acceleration = " + str(acceleration) + ".")
-
+            
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    degreesToMove = rotationsToMove * 360
+    motor.reset_relative_position(RIGHT_WHEEL_PORT, 0)
 
-    #TODO: add stopping condition    
-    while(1):
+    #stop following line after wheel moves the inputted degrees
+    while(abs(motor.relative_position(RIGHT_WHEEL_PORT)) < abs(degreesToMove)):
         turnCorrectionPercentage = correctionCoef * (midPointReflectionPercentage - color_sensor.reflection(lightSensorPort))
         turnCorrectionAmount = LARGE_MOTOR_MAX_VELOCITY * turnCorrectionPercentage/100
         
@@ -437,3 +440,6 @@ async def proportionalBlackLineFollow(lightSensorPort, midPointReflectionPercent
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity + turnCorrectionAmount), int(velocity - turnCorrectionAmount), acceleration=acceleration)
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity - turnCorrectionAmount), int(velocity + turnCorrectionAmount), acceleration=acceleration)
+
+    motor_pair.stop(motor_pair.PAIR_1)
+    print("Degrees moved = ", motor.relative_position(RIGHT_WHEEL_PORT))

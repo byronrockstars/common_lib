@@ -4,10 +4,12 @@ import runloop, motor, motor_pair, sys, time, color_sensor, color
 
 #LARGE_MOTOR_MAX_VELOCITY = 1050
 LARGE_MOTOR_MAX_VELOCITY = 1110 #this is actually a medium motor being used to power the wheels
-BLACK_LINE_LIGHT_REFLECTION = 50
-WHITE_LINE_LIGHT_REFLECTION = 95
 LEFT_WHEEL_PORT = port.A
 RIGHT_WHEEL_PORT = port.E
+WHEEL_BASE_IN_CENTIMETERS = 8.8  #measured from center of each tire (tires are 2 cm thick)
+
+BLACK_LINE_LIGHT_REFLECTION = 50
+WHITE_LINE_LIGHT_REFLECTION = 95
 BLACK_LINE_RIGHT_EDGE = "Right"
 BLACK_LINE_LEFT_EDGE = "Left"
 
@@ -69,6 +71,39 @@ async def spinTurn(degreesToTurn, velocity) -> None:
     #multiplying by -0.1 makes yaw angle match values in hub
     print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
 
+    return
+
+
+#Completes an arc turn up to 179 degrees.
+#Input parameters:  radiusInCm: radius of circle (in centimeters) that robot moves while making its arc turn. A value of 0 equates to a spin turn (use dedicated spin turn functions instead).
+#                   degreesToTurn: positive value if turning to right and negative if turning to left
+#                   velocityPercentage (optional): how fast to complete the turn in percentage (1 to 100). Negative values move backward.
+async def arcTurn(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
+    print("Arc Turn. radiusInCm = " + str(radiusInCm) + ", degreesToTurn = " + str(degreesToTurn) + ", velocityPercentage = " + str(velocityPercentage) + ".")
+
+    velocity = velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY
+
+    halfWheelBase = WHEEL_BASE_IN_CENTIMETERS / 2.0
+    innerWheelRadius = radiusInCm - halfWheelBase
+    outerWheelRadius = radiusInCm + halfWheelBase
+    wheelRadiusRatio = innerWheelRadius/outerWheelRadius  #-1.0 for a spin turn
+
+    #steering is 0 when straight with a max of 100 (pivot turn). Higher values slow or reverse the inner wheel.
+    steering = int((1 - wheelRadiusRatio) * 50)
+
+    if degreesToTurn < 0: 
+        steering = -steering
+
+    motion_sensor.reset_yaw(0)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
+    motor_pair.move(motor_pair.PAIR_1, steering, velocity=int(velocity))
+
+    #lambda makes function with parameters callable since runloop.until() expects a function with no parameters
+    await runloop.until(lambda: __turnCompleted(degreesToTurn))
+    motor_pair.stop(motor_pair.PAIR_1)
+
+    #multiplying by -0.1 makes yaw angle match values in hub
+    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
     return
 
 

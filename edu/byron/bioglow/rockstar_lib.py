@@ -202,7 +202,7 @@ async def moveForward(stoppingRotations, velocityPercentage, acceleration = 500,
     degreesToMove = stoppingRotations * 360
     velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
 
-    await motor_pair.move_for_degrees(motor_pair.PAIR_1, degreesToMove, 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, int(degreesToMove), 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
     return
 
 

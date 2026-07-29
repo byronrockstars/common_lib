@@ -4,7 +4,7 @@ import runloop, motor, motor_pair, sys, time, color_sensor, color
 
 #LARGE_MOTOR_MAX_VELOCITY = 1050
 LARGE_MOTOR_MAX_VELOCITY = 1110 #this is actually a medium motor being used to power the wheels
-LEFT_WHEEL_PORT = port.A
+LEFT_WHEEL_PORT = port.C
 RIGHT_WHEEL_PORT = port.E
 WHEEL_BASE_IN_CENTIMETERS = 8.8  #measured from center of each tire (tires are 2 cm thick)
 
@@ -354,6 +354,7 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
     return triggeredSensorPort
 
 
+#@deprecated("Use squareUpOnLine instead.")
 #Rotates robot until second light sensor finds the colored line.
 #Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
 #                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
@@ -398,6 +399,7 @@ async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, 
     return
 
 
+#@deprecated("Use squareUpOnLine instead.")
 #Squares up robot on black line by moving off the line and then back on. 
 #Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
 #                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
@@ -446,6 +448,46 @@ async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMov
         #move left wheel forward on black line
         await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
 
+    return
+
+
+#Squares up robot on black line by stopping each motor as its corresponding light sensor sees the black line. For best results, run at lower speeds and
+#back robot off line after first call and run a second time. 
+#Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
+#                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
+#                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
+#                   velocityPercentage (optional): 0% to 100%.
+#                   acceleration (optional): (deg/sec^2) Default is 500.
+async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500): 
+    print("AltSquareUpOnLine leftLightSensorPort = " + str(leftLightSensorPort) + ", rightLightSensorPort = " + str(rightLightSensorPort) + ", lineColor = " + str(lineColor) + 
+            ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
+    
+    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    motor.run(LEFT_WHEEL_PORT, int(-velocity), acceleration=acceleration)  #left wheel uses negative velocity due to mirrored placement of motor
+    motor.run(RIGHT_WHEEL_PORT, int(velocity), acceleration=acceleration)
+
+    leftSensorFoundLine = False
+    rightSensorFoundLine = False
+ 
+    # wait for color sensors to detect black or white line and stop matching motor
+    while (not leftSensorFoundLine or not rightSensorFoundLine):
+        if(lineColor == color.BLACK):
+            if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
+                motor.stop(LEFT_WHEEL_PORT)
+                leftSensorFoundLine = True
+            if(color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
+                motor.stop(RIGHT_WHEEL_PORT)
+                rightSensorFoundLine = True
+        elif(lineColor == color.WHITE):
+            if(color_sensor.reflection(leftLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
+                motor.stop(LEFT_WHEEL_PORT)
+                leftSensorFoundLine = True
+            if(color_sensor.reflection(rightLightSensorPort) > WHITE_LINE_LIGHT_REFLECTION):
+                motor.stop(RIGHT_WHEEL_PORT)
+                rightSensorFoundLine = True
+        else:
+            print("Line color of " + str(lineColor) + " is invalid.")
+    
     return
 
 

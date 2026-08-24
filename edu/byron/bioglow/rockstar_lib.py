@@ -3,7 +3,8 @@ import hub
 import runloop, motor, motor_pair, sys, time, color_sensor, color
 
 #LARGE_MOTOR_MAX_VELOCITY = 1050
-LARGE_MOTOR_MAX_VELOCITY = 1110 #this is actually a medium motor being used to power the wheels
+MEDIUM_MOTOR_MAX_VELOCITY = 1110
+WHEEL_MOTOR_MAX_VELOCITY = MEDIUM_MOTOR_MAX_VELOCITY
 LEFT_WHEEL_PORT = port.C
 RIGHT_WHEEL_PORT = port.E
 WHEEL_BASE_IN_CENTIMETERS = 8.8  #measured from center of each tire (tires are 2 cm thick)
@@ -24,7 +25,7 @@ def __turnCompleted(degreesToTurn) -> bool:
 #Input parameters:  degreesToTurn: positive value if turning to right and negative if turning to left
 #                   velocity: (deg/sec) Large motor range = -1050 to 1050
 async def pivotTurn(degreesToTurn, velocity) -> None:
-    print("Pivot Turn")
+    print("In pivotTurn, degreesToTurn = " + str(degreesToTurn) + ", velocity = " + str(velocity) + ".")
 
     motion_sensor.reset_yaw(0)
     time.sleep(0.1) #reset yaw can take a bit of time to complete
@@ -51,7 +52,7 @@ async def pivotTurn(degreesToTurn, velocity) -> None:
 #Input parameters:  degreesToTurn: positive value if turning to right and negative if turning to left
 #                   velocity: (deg/sec) Large motor range = -1050 to 1050
 async def spinTurn(degreesToTurn, velocity) -> None:
-    print("Spin Turn")
+    print("In spinTurn, degreesToTurn = " + str(degreesToTurn) + ", velocity = " + str(velocity) + ".")
 
     motion_sensor.reset_yaw(0)
     time.sleep(0.1) #reset yaw can take a bit of time to complete
@@ -81,7 +82,7 @@ async def spinTurn(degreesToTurn, velocity) -> None:
 async def arcTurn(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
     print("Arc Turn. radiusInCm = " + str(radiusInCm) + ", degreesToTurn = " + str(degreesToTurn) + ", velocityPercentage = " + str(velocityPercentage) + ".")
 
-    velocity = velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY
+    velocity = velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY
 
     halfWheelBase = WHEEL_BASE_IN_CENTIMETERS / 2.0
     innerWheelRadius = radiusInCm - halfWheelBase
@@ -129,7 +130,7 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
-        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/40  #pivot turns are slower so take a larger percentage of the max velocity 
+        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/40  #pivot turns are slower so take a larger percentage of the max velocity 
 
         if(degreesToTurn > 0):
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0) #right turn
@@ -171,7 +172,7 @@ async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout =
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
-        turnPower = turnError * velocityPercentage/100 * LARGE_MOTOR_MAX_VELOCITY/50
+        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/50
 
         if(degreesToTurn > 0):
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1* int(turnPower)) #right turn
@@ -200,7 +201,7 @@ async def moveForward(stoppingRotations, velocityPercentage, acceleration = 500,
     print("In moveForward function, rotations to move = " + str(stoppingRotations) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ", deceleration = " + str(deceleration) + ".")
 
     degreesToMove = stoppingRotations * 360
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
 
     await motor_pair.move_for_degrees(motor_pair.PAIR_1, int(degreesToMove), 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
     return
@@ -215,7 +216,7 @@ async def __moveForwardProporational(rotations, velocity, acceleration = 500, br
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot
     brakeStartDistance = degrees * brakeStartPercentage
-    endSpeed = LARGE_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
+    endSpeed = WHEEL_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
 
     while (motor.relative_position(RIGHT_WHEEL_PORT) < degrees):
         error = motion_sensor.tilt_angles()[0] * -0.1 #gyro reading should be 0 if robot is moving straight
@@ -244,7 +245,7 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
     degrees = rotations * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0) #using right wheel port as its relative position is positive while moving forward on test robot
     brakeStartDistance = degrees * brakeStartPercentage
-    endSpeed = LARGE_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
+    endSpeed = WHEEL_MOTOR_MAX_VELOCITY * .1 #10% speed is slowest to go in order for motor to complete distance
 
     while (motor.relative_position(RIGHT_WHEEL_PORT) > degrees):
         error = motion_sensor.tilt_angles()[0] * -0.1 #gyro reading should be 0 if robot is moving straight
@@ -276,7 +277,7 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
 #                                                    Typical values are -1 to -5. 
 async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue = 0.9, correctionMultiplier = -3.5) -> None:
     print("MoveStraightWheelRotations. Stopping Rotations =" + str(stoppingRotations) + ". Velocity % = " + str(velocityPercentage) + ", Acceleration = " + str(acceleration) + ", Brake Start Value = " + str(brakeStartValue) + ", Correction Multiplier = " + str(correctionMultiplier) + ".")
-    velocity = LARGE_MOTOR_MAX_VELOCITY * abs(velocityPercentage)/100  #negative values for velocity are not allowed so take absolute value
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * abs(velocityPercentage)/100  #negative values for velocity are not allowed so take absolute value
     
     if(stoppingRotations > 0):
         await __moveForwardProporational(stoppingRotations, int(velocity), acceleration, brakeStartValue, correctionMultiplier)
@@ -322,7 +323,7 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
     print("In moveStraightUntilLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " + 
             str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)  + ", acceleration = " + str(acceleration) + ".")
 
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
     motor_pair.move(motor_pair.PAIR_1, 0, velocity=int(velocity), acceleration=acceleration)  
 
     triggeredSensorPort = -1
@@ -365,7 +366,7 @@ async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, 
     print("In getSecondLightSensorOnLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) + ", line color = " +
             str(lineColor) + ", velocityPercentage = " + str(velocityPercentage)+ ", acceleration = " + str(acceleration) + ".")
 
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
 
     if(lineColor == color.BLACK):
         if(color_sensor.reflection(leftLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION):
@@ -399,58 +400,6 @@ async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, 
     return
 
 
-#@deprecated("Use squareUpOnLine instead.")
-#Squares up robot on black line by moving off the line and then back on. 
-#Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
-#                   rightLightSensorPort: port where right light sensor is connected (ex. port.D)
-#                   leftMoveFirst (optional): If true, left wheel of robot will move first (best if left light sensor was first to find black line originally)
-#                                  If false, right wheel of robot will move first (best if right light sensor was first to find black line originally)
-#                   velocityPercentage (optional): 0% to 100%.
-#                   acceleration (optional): (deg/sec^2) Default is 500.
-async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst = True, velocityPercentage=10, acceleration=500) -> None:
-    print("In squareUpOnBlackLine function, left light sensor port = " + str(leftLightSensorPort) + ", right light sensor port = " + str(rightLightSensorPort) +
-            ", leftMoveFirst = " + str(leftMoveFirst) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
-
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
-    
-    if(leftMoveFirst):
-        #back left wheel off black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
-        time.sleep(0.1)
-
-        #back right wheel off black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
-        time.sleep(0.1)
-
-        #move left wheel forward on black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
-        time.sleep(0.1)
-
-        #move right wheel forward on black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
-    else:
-        #back right wheel off black line
-        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(-1 * velocity), acceleration=acceleration)
-        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) > BLACK_LINE_LIGHT_REFLECTION)
-        motor_pair.stop(motor_pair.PAIR_1)
-        time.sleep(0.1)
-
-        #back left wheel off black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.WHITE, -1 * velocityPercentage)
-        time.sleep(0.1)
-
-        #move right wheel forward on black line   
-        motor_pair.move_tank(motor_pair.PAIR_1, 0, int(velocity), acceleration=acceleration)
-        await runloop.until(lambda: color_sensor.reflection(rightLightSensorPort) < BLACK_LINE_LIGHT_REFLECTION)
-        motor_pair.stop(motor_pair.PAIR_1)
-        time.sleep(0.1)
-
-        #move left wheel forward on black line
-        await getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage)
-
-    return
-
-
 #Squares up robot on black line by stopping each motor as its corresponding light sensor sees the black line. For best results, run at lower speeds and
 #back robot off line after first call and run a second time. 
 #Input parameters:  leftLightSensorPort: port where left light sensor is connected (ex. port.B)
@@ -458,11 +407,11 @@ async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMov
 #                   lineColor: color of line to stop at (color.BLACK or color.WHITE)
 #                   velocityPercentage (optional): 0% to 100%.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
-async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500): 
+async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500) -> None: 
     print("AltSquareUpOnLine leftLightSensorPort = " + str(leftLightSensorPort) + ", rightLightSensorPort = " + str(rightLightSensorPort) + ", lineColor = " + str(lineColor) + 
             ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ".")
     
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
     motor.run(LEFT_WHEEL_PORT, int(-velocity), acceleration=acceleration)  #left wheel uses negative velocity due to mirrored placement of motor
     motor.run(RIGHT_WHEEL_PORT, int(velocity), acceleration=acceleration)
 
@@ -491,32 +440,51 @@ async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, v
     return
 
 
-#Follows black line using the light sensor for number of rotations. Meant to be used for forward movement only currently.
+#Follows black line using the light sensor. Meant to be used for forward movement only currently.
 #Input parameters:  rotationsToMove: Number of rotations to move while following line.
 #                   lightSensorPort: port where light sensor to use for following black line is connected (ex. port.B)
 #                   midPointReflectionPercentage: Average of white and black reflection readings (in percentage) from the light sensor on the board.
 #                   edgeToFollow: whether to follow the black line on the left (BLACK_LINE_LEFT_EDGE) or right (BLACK_LINE_RIGHT_EDGE)
-#                   correctionCoef: value between 0 and 1 that determines how aggressively to make corrections to movement
+#                   proportionalCorrectionCoef: value between 0 and 1 that determines how aggressively to make corrections to movement (Tune this first.)
+#                   integralCorrectionCoef: corrects steady drift (Tune this last. Should be small value ex. 0.05) 
+#                   derivativeCorrectionCoef: smoothes overcorrections (Tune this second after proportionalCorrectionCoef.)
 #                   velocityPercentage (optional): 0% to 100%.
 #                   acceleration (optional): (deg/sec^2) Default is 500.
-async def proportionalBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, correctionCoef=0.4, velocityPercentage=10, acceleration=500) -> None:
-    print("In proportionalBlackLineFollow function, rotationsToMove = " + str(rotationsToMove) + ", lightSensorPort = " + str(lightSensorPort) + ", midPointReflectionPercentage = " + str(midPointReflectionPercentage) + 
-            ", edgeToFollow = " + str(edgeToFollow) + ", correctionCoef = " + str(correctionCoef) + ", velocityPercentage = " + str(velocityPercentage) + 
+async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef = 0.0, derivativeCorrectionCoef = 0.0, velocityPercentage=10, acceleration=500) -> None:
+    print("In pidBlackLineFollow, rotationsToMove = " + str(rotationsToMove) + ", lightSensorPort = " + str(lightSensorPort) + ", midPointReflectionPercentage = " + str(midPointReflectionPercentage) +
+            ", edgeToFollow = " + str(edgeToFollow) + ", proportionalCorrectionCoef = " + str(proportionalCorrectionCoef) + ", integralCorrectionCoef = " + 
+            str(integralCorrectionCoef) + ", derivativeCorrectionCoef = " + str(derivativeCorrectionCoef) + ", velocity% = " + str(velocityPercentage) +
             ", acceleration = " + str(acceleration) + ".")
-            
-    velocity = LARGE_MOTOR_MAX_VELOCITY * velocityPercentage/100
+
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
     degreesToMove = rotationsToMove * 360
     motor.reset_relative_position(RIGHT_WHEEL_PORT, 0)
+    
+    lastError = 0.0 #stores previous light sensor error reading
+    integral = 0.0
 
     #stop following line after wheel moves the inputted degrees
     while(abs(motor.relative_position(RIGHT_WHEEL_PORT)) < abs(degreesToMove)):
-        turnCorrectionPercentage = correctionCoef * (midPointReflectionPercentage - color_sensor.reflection(lightSensorPort))
-        turnCorrectionAmount = LARGE_MOTOR_MAX_VELOCITY * turnCorrectionPercentage/100
+        error = midPointReflectionPercentage - color_sensor.reflection(lightSensorPort)
+       
+        #corrects steady drift (tune this last after proportional and derivative values)
+        integral = integral + error #adds error to previous integral drift
+        integral = max(-100, min(100, integral)) #keeps intregal between -100 and 100 so that drift doesn't pile up
         
+        #smoothes overcorrections (tune this second after proportional error term)
+        derivative = error - lastError 
+        
+        lastError = error #reset previous error value after it has been used in calculation
+        
+        turnCorrectionPercentage = proportionalCorrectionCoef * error + integralCorrectionCoef * integral + derivativeCorrectionCoef * derivative
+        turnCorrectionAmount = WHEEL_MOTOR_MAX_VELOCITY * turnCorrectionPercentage/100
+
         if(edgeToFollow == BLACK_LINE_RIGHT_EDGE):
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity + turnCorrectionAmount), int(velocity - turnCorrectionAmount), acceleration=acceleration)
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, int(velocity - turnCorrectionAmount), int(velocity + turnCorrectionAmount), acceleration=acceleration)
+        
+        #runloop.sleep_ms(5)
 
     motor_pair.stop(motor_pair.PAIR_1)
     print("Degrees moved = ", motor.relative_position(RIGHT_WHEEL_PORT))

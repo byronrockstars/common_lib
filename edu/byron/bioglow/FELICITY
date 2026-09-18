@@ -30,7 +30,6 @@ async def _runMission6() -> None:
 
 async def _runMission11() -> None:
     #Mission 11 (Window to the Past)
-    await moveStraightWheelRotation(.75, 50, correctionMultiplier=-3.5, brakeStartValue=0.8, acceleration=400)
     await proportionalSpinTurn(-95)
     await moveStraightWheelRotation(4, 75, correctionMultiplier=-3.5, brakeStartValue=0.8, acceleration=400)
     return
@@ -42,12 +41,23 @@ async def runMission7_6_11() -> None:
     await _runMission11()
     return
 
+	
+async def _runMission13() -> None:
+    #Mission 13 (Keystone Species)
+    await moveStraightWheelRotation(3.7, velocityPercentage=40)
+    await proportionalPivotTurn(45)
+    await moveStraightWheelRotation(0.25, velocityPercentage=30)
+    await moveStraightWheelRotation(-0.37, velocityPercentage=30)
+    return
+
 
 async def main():
     print("Starting program.")
 
-    motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)  #Ash
-    await runMission7_6_11()
+    motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)  #Misty
+    #await runMission7_6_11()
+	
+	await _runMission13()
         
     return
 	

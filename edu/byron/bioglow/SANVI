@@ -4,8 +4,23 @@ import color
 import Combined as RW
 
 
+async def runMission3() -> None:
+    #Mission 3 (Flip the Rock)
+    await moveForward(2.38, 40)
+    await moveForward(-2.35, 100)
+    return
+
+
 async def main():
-    # One simple active wrapper call.
+    print("Starting program.")
+
+    motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)  #Ash
+    await runMission3()
+        
+    return
+	
+	
+	# One simple active wrapper call.
     # This is safe to run because it only writes to the light matrix.
 
     # ------------------------------------------------------------
@@ -38,17 +53,17 @@ async def main():
 
     # await RW.proportionalSpinTurnRight(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
     # await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=30, timeout=2.0)
-    direction = "b"
+    #direction = "b"
 
-    if direction == "f":
-        await RW.displayMessage("fwrd")
-        await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
-    elif direction == "b":
-        await RW.displayMessage("bwrd")
-        await RW.moveBackwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
-    else:
-        # Error handling for typos
-        await RW.displayMessage("ERROR!")
+    #if direction == "f":
+    #    await RW.displayMessage("fwrd")
+    #    await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    #elif direction == "b":
+    #    await RW.displayMessage("bwrd")
+    #    await RW.moveBackwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
+    #else:
+    #    # Error handling for typos
+    #    await RW.displayMessage("ERROR!")
 
     # await RW.moveForwardGyro(stoppingRotations=3, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)
     # await RW.moveBackwardGyro(stoppingRotations=2, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)

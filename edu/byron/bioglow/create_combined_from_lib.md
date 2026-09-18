@@ -21,25 +21,31 @@ The current wrapper API is mostly asynchronous. Preserve that style: public wrap
 1. Start from the library imports, constants, helper functions, and core async functions.
 2. Use the combined import set needed by both files, but remove `import rockstar_lib as RL` because the library logic is copied directly into `Combined.py`.
 3. Keep library constants public and unchanged:
-   - `LARGE_MOTOR_MAX_VELOCITY`
-   - `BLACK_LINE_LIGHT_REFLECTION`
-   - `WHITE_LINE_LIGHT_REFLECTION`
+   - `MEDIUM_MOTOR_MAX_VELOCITY`
+   - `WHEEL_MOTOR_MAX_VELOCITY`
    - `LEFT_WHEEL_PORT`
    - `RIGHT_WHEEL_PORT`
-4. Rename copied library public functions with a leading underscore to avoid collisions with wrapper functions.
+   - `WHEEL_BASE_IN_CENTIMETERS`
+   - `BLACK_LINE_LIGHT_REFLECTION`
+   - `WHITE_LINE_LIGHT_REFLECTION`
+   - `BLACK_LINE_RIGHT_EDGE`
+   - `BLACK_LINE_LEFT_EDGE`
+4. Do not reintroduce the old `LARGE_MOTOR_MAX_VELOCITY` constant. The current library uses `WHEEL_MOTOR_MAX_VELOCITY`, which is based on `MEDIUM_MOTOR_MAX_VELOCITY`.
+5. Rename copied library public functions with a leading underscore to avoid collisions with wrapper functions.
    - `pivotTurn(...)` becomes `_pivotTurn(...)`.
    - `spinTurn(...)` becomes `_spinTurn(...)`.
+   - `arcTurn(...)` becomes `_arcTurn(...)`.
    - `proportionalPivotTurn(...)` becomes `_proportionalPivotTurn(...)`.
    - `proportionalSpinTurn(...)` becomes `_proportionalSpinTurn(...)`.
    - `moveForward(...)` becomes `_moveForward(...)`.
    - `moveStraightWheelRotation(...)` becomes `_moveStraightWheelRotation(...)`.
    - `moveStraightUntilLine(...)` becomes `_moveStraightUntilLine(...)`.
    - `getSecondLightSensorOnLine(...)` becomes `_getSecondLightSensorOnLine(...)`.
-   - `squareUpOnBlackLine(...)` becomes `_squareUpOnBlackLine(...)`.
-5. Keep internal helper functions private-style, such as `__turnCompleted(...)`, `__moveForwardProporational(...)`, `__moveBackwardProporational(...)`, `__blackLineFound(...)`, and `__whiteLineFound(...)`.
-6. After renaming library functions, update any internal library references to renamed functions.
-   - Inside copied `_squareUpOnBlackLine(...)`, calls to `getSecondLightSensorOnLine(...)` must become `_getSecondLightSensorOnLine(...)`.
-7. Preserve the public wrapper function names and signatures from `rockstar_wrapper.py`:
+   - `squareUpOnLine(...)` becomes `_squareUpOnLine(...)`.
+   - `pidBlackLineFollow(...)` becomes `_pidBlackLineFollow(...)`.
+6. Keep internal helper functions private-style, such as `__turnCompleted(...)`, `__moveForwardProporational(...)`, `__moveBackwardProporational(...)`, `__blackLineFound(...)`, and `__whiteLineFound(...)`.
+7. After renaming library functions, update any internal library references to renamed functions if needed. In the current library, most helper calls already target private helper functions and can remain unchanged.
+8. Preserve the public wrapper function names and signatures from `rockstar_wrapper.py`:
    - `moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000)`
    - `moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000)`
    - `displayMessage(messageToDisplay)`
@@ -47,6 +53,8 @@ The current wrapper API is mostly asynchronous. Preserve that style: public wrap
    - `pivotTurnLeft(degreesToTurn, velocityPercentage=25)`
    - `spinTurnRight(degreesToTurn, velocityPercentage=25)`
    - `spinTurnLeft(degreesToTurn, velocityPercentage=25)`
+   - `arcTurnRight(radiusInCm, degreesToTurn, velocityPercentage=20)`
+   - `arcTurnLeft(radiusInCm, degreesToTurn, velocityPercentage=20)`
    - `proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0)`
    - `proportionalPivotTurnLeft(degreesToTurn, velocityPercentage=40, timeout=2.0)`
    - `proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0)`
@@ -55,28 +63,36 @@ The current wrapper API is mostly asynchronous. Preserve that style: public wrap
    - `moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5)`
    - `moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500)`
    - `getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500)`
-   - `squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst=True, velocityPercentage=10, acceleration=500)`
+   - `squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500)`
+   - `squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, velocityPercentage=15, acceleration=500)`
+   - `pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef=0.0, derivativeCorrectionCoef=0.0, velocityPercentage=10, acceleration=500)`
    - `resetEverything()`
    - `initializeRobot(name: str, mainPortLeft=LEFT_WHEEL_PORT, mainPortRight=RIGHT_WHEEL_PORT)`
-8. Preserve the wrapper helper `__velocity(velocityPercentage)`, but update it to use the copied constant directly instead of `RL.LARGE_MOTOR_MAX_VELOCITY`.
-9. Fix wrapper-to-library references inside `Combined.py` only.
+9. Preserve the wrapper helper `__velocity(velocityPercentage)`, but update it to use the copied constant directly instead of `RL.WHEEL_MOTOR_MAX_VELOCITY`.
+10. Fix wrapper-to-library references inside `Combined.py` only.
+   - Replace `RL.WHEEL_MOTOR_MAX_VELOCITY` with `WHEEL_MOTOR_MAX_VELOCITY`.
    - Replace `RL.moveForward(...)` with `_moveForward(...)`.
    - Replace `RL.pivotTurn(...)` with `_pivotTurn(...)`.
    - Replace `RL.spinTurn(...)` with `_spinTurn(...)`.
+   - Replace `RL.arcTurn(...)` with `_arcTurn(...)`.
    - Replace `RL.proportionalPivotTurn(...)` with `_proportionalPivotTurn(...)`.
    - Replace `RL.proportionalSpinTurn(...)` with `_proportionalSpinTurn(...)`.
    - Replace `RL.moveStraightWheelRotation(...)` with `_moveStraightWheelRotation(...)`.
    - Replace `RL.moveStraightUntilLine(...)` with `_moveStraightUntilLine(...)`.
    - Replace `RL.getSecondLightSensorOnLine(...)` with `_getSecondLightSensorOnLine(...)`.
-   - Replace `RL.squareUpOnBlackLine(...)` with `_squareUpOnBlackLine(...)`.
+   - Replace `RL.squareUpOnLine(...)` with `_squareUpOnLine(...)`.
+   - Replace `RL.pidBlackLineFollow(...)` with `_pidBlackLineFollow(...)`.
    - Replace `RL.LEFT_WHEEL_PORT` with `LEFT_WHEEL_PORT`.
    - Replace `RL.RIGHT_WHEEL_PORT` with `RIGHT_WHEEL_PORT`.
-10. Keep public async wrappers asynchronous and call copied async library functions with `await`. Do not wrap public async wrappers in `runloop.run(...)`.
-11. Keep `initializeRobot(...)` as the public setup function that pairs the main motors and returns a simple dictionary containing `name`, `mainPortLeft`, and `mainPortRight`.
-12. Keep `resetEverything()` as a public synchronous helper that resets yaw and wheel relative positions.
-13. Add only minimal comments: no more than one line comment per function, and remove unnecessary existing comments.
-14. Do not change behavior beyond the required compatibility fixes.
-15. Do not modify the original `rockstar_lib.py` or `rockstar_wrapper.py` files.
+11. Keep public async wrappers asynchronous and call copied async library functions with `await`. Do not wrap public async wrappers in `runloop.run(...)`.
+12. Keep `moveStraightUntilLine(...)` returning the value from `_moveStraightUntilLine(...)`, because the library returns the triggered sensor port.
+13. Keep `getSecondLightSensorOnLine(...)` available for backward compatibility, even though the current library docstring marks it as deprecated in favor of `squareUpOnLine(...)`.
+14. Implement public `squareUpOnBlackLine(...)` as a convenience wrapper around `_squareUpOnLine(...)` with `color.BLACK`.
+15. Keep `initializeRobot(...)` as the public setup function that pairs the main motors and returns a simple dictionary containing `name`, `mainPortLeft`, and `mainPortRight`.
+16. Keep `resetEverything()` as a public synchronous helper that resets yaw and wheel relative positions.
+17. Add only minimal comments: no more than one line comment per function, and remove unnecessary existing comments.
+18. Do not change behavior beyond the required compatibility fixes.
+19. Do not modify the original `rockstar_lib.py` or `rockstar_wrapper.py` files.
 
 ## Compatibility Pattern
 
@@ -84,42 +100,87 @@ Use this pattern when adapting wrapper calls from `rockstar_wrapper.py` into `Co
 
 ```python
 def __velocity(velocityPercentage):
-    return int(LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
+    return int(WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
 ```
 
 ```python
 async def moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
     await _moveForward(-1 * rotations, velocityPercentage, acceleration, deceleration)
-    return
 ```
 
 ```python
 async def moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
     await _moveForward(rotations, velocityPercentage, acceleration, deceleration)
-    return
+```
+
+```python
+async def displayMessage(messageToDisplay):
+    light_matrix.write(str(messageToDisplay))
 ```
 
 ```python
 async def pivotTurnRight(degreesToTurn, velocityPercentage=25):
     await _pivotTurn(degreesToTurn, __velocity(velocityPercentage))
-    return
 ```
 
 ```python
 async def pivotTurnLeft(degreesToTurn, velocityPercentage=25):
     await _pivotTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
-    return
+```
+
+```python
+async def spinTurnRight(degreesToTurn, velocityPercentage=25):
+    await _spinTurn(degreesToTurn, __velocity(velocityPercentage))
+```
+
+```python
+async def spinTurnLeft(degreesToTurn, velocityPercentage=25):
+    await _spinTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
+```
+
+```python
+async def arcTurnRight(radiusInCm, degreesToTurn, velocityPercentage=20):
+    await _arcTurn(radiusInCm, degreesToTurn, velocityPercentage)
+```
+
+```python
+async def arcTurnLeft(radiusInCm, degreesToTurn, velocityPercentage=20):
+    await _arcTurn(radiusInCm, -1 * degreesToTurn, velocityPercentage)
 ```
 
 ```python
 async def moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
     await _moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
-    return
+```
+
+```python
+async def moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
+    await _moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
 ```
 
 ```python
 async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500):
     return await _moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine, velocityPercentage, acceleration)
+```
+
+```python
+async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500):
+    await _getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
+```
+
+```python
+async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500):
+    await _squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
+```
+
+```python
+async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, velocityPercentage=15, acceleration=500):
+    await _squareUpOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage, acceleration)
+```
+
+```python
+async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef=0.0, derivativeCorrectionCoef=0.0, velocityPercentage=10, acceleration=500):
+    await _pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef, integralCorrectionCoef, derivativeCorrectionCoef, velocityPercentage, acceleration)
 ```
 
 ```python
@@ -145,6 +206,8 @@ async def main():
     initializeRobot("Robot")
     await moveForward(2)
     await pivotTurnRight(90)
+    await arcTurnRight(20, 45)
+    await squareUpOnBlackLine(port.B, port.D)
 
 runloop.run(main())
 ```

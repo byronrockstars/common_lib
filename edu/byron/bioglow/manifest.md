@@ -153,6 +153,20 @@ await RL.spinTurnRight(90)
 await RL.spinTurnLeft(90)
 ```
 
+Arc turns move the robot along a curved path using a turn radius.
+
+```python
+await RL.arcTurnRight(radiusInCm, degreesToTurn)
+await RL.arcTurnLeft(radiusInCm, degreesToTurn)
+```
+
+Examples:
+
+```python
+await RL.arcTurnRight(20, 90)
+await RL.arcTurnLeft(20, 90)
+```
+
 Proportional pivot turns slow down near the target angle for better accuracy.
 
 ```python
@@ -186,6 +200,7 @@ Optional turn settings can be supplied directly to the turn call.
 ```python
 await RL.pivotTurnRight(degreesToTurn, velocityPercentage=25)
 await RL.spinTurnRight(degreesToTurn, velocityPercentage=25)
+await RL.arcTurnRight(radiusInCm, degreesToTurn, velocityPercentage=20)
 await RL.proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0)
 await RL.proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0)
 ```
@@ -246,6 +261,18 @@ Example:
 await RL.getSecondLightSensorOnLine(port.B, port.D, color.BLACK)
 ```
 
+Square up on a requested line color using two light sensors.
+
+```python
+await RL.squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor)
+```
+
+Example:
+
+```python
+await RL.squareUpOnLine(port.B, port.D, color.WHITE)
+```
+
 Square up on a black line using two light sensors.
 
 ```python
@@ -258,6 +285,29 @@ Example:
 await RL.squareUpOnBlackLine(port.B, port.D)
 ```
 
+Follow a black line using PID correction.
+
+```python
+await RL.pidBlackLineFollow(
+    rotationsToMove,
+    lightSensorPort,
+    midPointReflectionPercentage,
+    edgeToFollow,
+)
+```
+
+Example:
+
+```python
+edgeToFollow = "LEFT"
+await RL.pidBlackLineFollow(
+    2,
+    port.B,
+    50,
+    edgeToFollow,
+)
+```
+
 ## CHANGE SETTINGS
 
 Change the main drive motor speed by passing `velocityPercentage` to movement and turn functions.
@@ -265,6 +315,7 @@ Change the main drive motor speed by passing `velocityPercentage` to movement an
 ```python
 await RL.moveForward(rotations, velocityPercentage=40)
 await RL.pivotTurnRight(degreesToTurn, velocityPercentage=40)
+await RL.arcTurnRight(radiusInCm, degreesToTurn, velocityPercentage=20)
 ```
 
 Example:
@@ -283,6 +334,61 @@ Example:
 
 ```python
 await RL.moveForward(1, acceleration=500, deceleration=1000)
+```
+
+Change gyro correction behavior by passing optional gyro movement parameters.
+
+```python
+await RL.moveForwardGyro(stoppingRotations, brakeStartValue=0.9, correctionMultiplier=-3.5)
+```
+
+Example:
+
+```python
+await RL.moveForwardGyro(1, brakeStartValue=0.8, correctionMultiplier=-3.0)
+```
+
+Change line detection speed and acceleration by passing optional line detection parameters.
+
+```python
+await RL.moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500)
+await RL.squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500)
+await RL.squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, velocityPercentage=15, acceleration=500)
+```
+
+Example:
+
+```python
+await RL.squareUpOnBlackLine(port.B, port.D, velocityPercentage=10)
+```
+
+Change PID black line following behavior by passing optional PID parameters.
+
+```python
+await RL.pidBlackLineFollow(
+    rotationsToMove,
+    lightSensorPort,
+    midPointReflectionPercentage,
+    edgeToFollow,
+    proportionalCorrectionCoef=0.15,
+    integralCorrectionCoef=0.0,
+    derivativeCorrectionCoef=0.0,
+    velocityPercentage=10,
+    acceleration=500,
+)
+```
+
+Example:
+
+```python
+await RL.pidBlackLineFollow(
+    2,
+    port.B,
+    50,
+    edgeToFollow,
+    proportionalCorrectionCoef=0.2,
+    velocityPercentage=15,
+)
 ```
 
 Change the proportional turn timeout by passing `timeout` to proportional turn functions.

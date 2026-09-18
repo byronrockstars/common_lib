@@ -4,72 +4,67 @@ import rockstar_lib as RL
 
 
 def __velocity(velocityPercentage):
-    return int(RL.LARGE_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
+    return int(RL.WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage / 100)
 
 
 async def moveBackward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
     await RL.moveForward(-1 * rotations, velocityPercentage, acceleration, deceleration)
-    return
 
 
 async def moveForward(rotations, velocityPercentage=25, acceleration=500, deceleration=1000):
     await RL.moveForward(rotations, velocityPercentage, acceleration, deceleration)
-    return
 
 
 async def displayMessage(messageToDisplay):
     light_matrix.write(str(messageToDisplay))
-    return
 
 
 async def pivotTurnRight(degreesToTurn, velocityPercentage=25):
     await RL.pivotTurn(degreesToTurn, __velocity(velocityPercentage))
-    return
 
 
 async def pivotTurnLeft(degreesToTurn, velocityPercentage=25):
     await RL.pivotTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
-    return
 
 
 async def spinTurnRight(degreesToTurn, velocityPercentage=25):
     await RL.spinTurn(degreesToTurn, __velocity(velocityPercentage))
-    return
 
 
 async def spinTurnLeft(degreesToTurn, velocityPercentage=25):
     await RL.spinTurn(-1 * degreesToTurn, __velocity(velocityPercentage))
-    return
+
+
+async def arcTurnRight(radiusInCm, degreesToTurn, velocityPercentage=20):
+    await RL.arcTurn(radiusInCm, degreesToTurn, velocityPercentage)
+
+
+async def arcTurnLeft(radiusInCm, degreesToTurn, velocityPercentage=20):
+    await RL.arcTurn(radiusInCm, -1 * degreesToTurn, velocityPercentage)
 
 
 async def proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0):
     await RL.proportionalPivotTurn(degreesToTurn, velocityPercentage, timeout)
-    return
 
 
 async def proportionalPivotTurnLeft(degreesToTurn, velocityPercentage=40, timeout=2.0):
     await RL.proportionalPivotTurn(-1 * degreesToTurn, velocityPercentage, timeout)
-    return
 
 
 async def proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0):
     await RL.proportionalSpinTurn(degreesToTurn, velocityPercentage, timeout)
-    return
 
 
 async def proportionalSpinTurnLeft(degreesToTurn, velocityPercentage=30, timeout=2.0):
     await RL.proportionalSpinTurn(-1 * degreesToTurn, velocityPercentage, timeout)
-    return
 
 
 async def moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
     await RL.moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
-    return
 
 
 async def moveBackwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
     await RL.moveStraightWheelRotation(-1 * stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
-    return
 
 
 async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500):
@@ -78,12 +73,18 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
 
 async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500):
     await RL.getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
-    return
 
 
-async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst=True, velocityPercentage=10, acceleration=500):
-    await RL.squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, leftMoveFirst, velocityPercentage, acceleration)
-    return
+async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500):
+    await RL.squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage, acceleration)
+
+
+async def squareUpOnBlackLine(leftLightSensorPort, rightLightSensorPort, velocityPercentage=15, acceleration=500):
+    await RL.squareUpOnLine(leftLightSensorPort, rightLightSensorPort, color.BLACK, velocityPercentage, acceleration)
+
+
+async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef=0.0, derivativeCorrectionCoef=0.0, velocityPercentage=10, acceleration=500):
+    await RL.pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef, integralCorrectionCoef, derivativeCorrectionCoef, velocityPercentage, acceleration)
 
 
 def resetEverything():

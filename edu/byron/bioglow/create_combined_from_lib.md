@@ -149,6 +149,26 @@ async def arcTurnLeft(radiusInCm, degreesToTurn, velocityPercentage=20):
 ```
 
 ```python
+async def proportionalPivotTurnRight(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await _proportionalPivotTurn(degreesToTurn, velocityPercentage, timeout)
+```
+
+```python
+async def proportionalPivotTurnLeft(degreesToTurn, velocityPercentage=40, timeout=2.0):
+    await _proportionalPivotTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+```
+
+```python
+async def proportionalSpinTurnRight(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await _proportionalSpinTurn(degreesToTurn, velocityPercentage, timeout)
+```
+
+```python
+async def proportionalSpinTurnLeft(degreesToTurn, velocityPercentage=30, timeout=2.0):
+    await _proportionalSpinTurn(-1 * degreesToTurn, velocityPercentage, timeout)
+```
+
+```python
 async def moveForwardGyro(stoppingRotations, velocityPercentage=25, acceleration=500, brakeStartValue=0.9, correctionMultiplier=-3.5):
     await _moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration, brakeStartValue, correctionMultiplier)
 ```

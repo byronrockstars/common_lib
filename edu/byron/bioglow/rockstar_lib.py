@@ -21,7 +21,7 @@ def __turnCompleted(degreesToTurn) -> bool:
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
 
-async def pivotTurn(degreesToTurn, velocity) -> None:
+async def pivotTurn1(degreesToTurn, velocity) -> None:
     '''Completes a pivot turn up to 179 degrees. \n
             Input parameters:
                 degreesToTurn: positive value if turning to right and negative if turning to left
@@ -51,7 +51,7 @@ async def pivotTurn(degreesToTurn, velocity) -> None:
     return
 
 
-async def spinTurn(degreesToTurn, velocity) -> None:
+async def spinTurn1(degreesToTurn, velocity) -> None:
     '''Completes a spin turn up to 179 degrees. \n
             Input parameters:
                 degreesToTurn: positive value if turning to right and negative if turning to left
@@ -81,7 +81,7 @@ async def spinTurn(degreesToTurn, velocity) -> None:
     return
 
 
-async def arcTurn(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
+async def arcTurn1(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
     '''Completes an arc turn up to 179 degrees. \n 
             Input parameters:   
                 radiusInCm: radius of circle (in centimeters) that robot moves while making its arc turn. A value of 0 equates to a spin turn (use dedicated spin turn functions instead).
@@ -286,7 +286,7 @@ async def __moveBackwardProporational(rotations, velocity, acceleration = 500, b
     return
 
 
-async def moveStraightWheelRotation(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue = 0.9, correctionMultiplier = -3.5) -> None:
+async def moveStraightWheelRotation1(stoppingRotations, velocityPercentage, acceleration=500, brakeStartValue = 0.9, correctionMultiplier = -3.5) -> None:
     '''Moves straight using the gyro sensor to correct drift. \n
         Input parameters:
             stoppingRotations: positive value if going forward and negative if going backward
@@ -332,7 +332,7 @@ def __whiteLineFound(leftLightSensorPort, rightLightSensorPort, bothSensorsOnLin
 
 
 #TODO: allow for using gyro sensor to move
-async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500) -> int:
+async def moveStraightUntilLine1(leftLightSensorPort, rightLightSensorPort, lineColor, bothSensorsOnLine=False, velocityPercentage=25, acceleration=500) -> int:
     '''Moves straight ahead until one of the two light sensors finds the line with the inputted line color. \n
         Input parameters:
             leftLightSensorPort: port number of left light sensor (ex port.B)
@@ -379,7 +379,7 @@ async def moveStraightUntilLine(leftLightSensorPort, rightLightSensorPort, lineC
     return triggeredSensorPort
 
 
-async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> None: 
+async def getSecondLightSensorOnLine1(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=25, acceleration=500) -> None: 
     '''@deprecated("Use squareUpOnLine instead.")
         Rotates robot until second light sensor finds the colored line.
             Input parameters:
@@ -427,7 +427,7 @@ async def getSecondLightSensorOnLine(leftLightSensorPort, rightLightSensorPort, 
     return
 
 
-async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500) -> None: 
+async def squareUpOnLine1(leftLightSensorPort, rightLightSensorPort, lineColor, velocityPercentage=15, acceleration=500) -> None: 
     '''Squares up robot on black line by stopping each motor as its corresponding light sensor sees the black line. For best results, 
        run at lower speeds and back robot off line after first call and run a second time.
         Input parameters:
@@ -470,7 +470,7 @@ async def squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, v
     return
 
 
-async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef = 0.0, derivativeCorrectionCoef = 0.0, velocityPercentage=10, acceleration=500) -> None:
+async def pidBlackLineFollow1(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef = 0.0, derivativeCorrectionCoef = 0.0, velocityPercentage=10, acceleration=500) -> None:
     '''Follows black line using the light sensor. Meant to be used for forward movement only currently. \n
         Input parameters:
             rotationsToMove: Number of rotations to move while following line.

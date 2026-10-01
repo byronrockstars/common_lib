@@ -1,6 +1,5 @@
 from hub import port
 import runloop
-import color
 import Combined as RW
 
 
@@ -13,8 +12,8 @@ async def runMission3() -> None:
 
 async def runMission1() -> None:
     #Mission 1 (works :))
-    await RW.moveForward(rotations=4.796, velocityPercentage=40)
-    await RW.moveForward(rotations=-4.6, velocityPercentage=60)
+    await RW.moveForward(rotations=4.726, velocityPercentage=40)
+    await RW.moveForward(rotations=-4.6, velocityPercentage=100)
     return
 
 

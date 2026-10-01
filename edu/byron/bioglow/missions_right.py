@@ -49,8 +49,17 @@ async def _runMission13() -> None:
     await RW.moveForwardGyro(3.7, velocityPercentage=40)
     await RW.proportionalPivotTurnRight(45)
     await RW.moveForwardGyro(0.25, velocityPercentage=30)
-    await RW.moveBackwardGyro(0.37, velocityPercentage=30)
     return
+
+
+async def _runMission12() -> None:
+    #Mission 12 (Forest Elder)
+    await motor.run_for_degrees(port.D, -120, 400)
+    await RW.moveBackwardGyro(0.37, velocityPercentage=30)
+    await RW.proportionalPivotTurnRight(45)
+    await RW.moveBackwardGyro(4, velocityPercentage=40)
+    return
+
 
 
 async def main():
@@ -58,6 +67,7 @@ async def main():
 
     #await runMission7_6_11()
     await _runMission13()
+    await _runMission12()
     
 
 

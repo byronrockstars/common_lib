@@ -1,6 +1,7 @@
 from hub import port
 import runloop
 import color
+import motor
 import Combined as RW
 
 
@@ -51,23 +52,34 @@ async def _runMission13() -> None:
     await RW.moveForwardGyro(0.25, velocityPercentage=30)
     return
 
-
+    
 async def _runMission12() -> None:
     #Mission 12 (Forest Elder)
     await motor.run_for_degrees(port.D, -120, 400)
     await RW.moveBackwardGyro(0.37, velocityPercentage=30)
-    await RW.proportionalPivotTurnRight(45)
-    await RW.moveBackwardGyro(4, velocityPercentage=40)
+    await RW.proportionalPivotTurnLeft(30)
+    await RW.arcTurnRight(42, 85, velocityPercentage=-50)
     return
 
+
+async def runMission13_12() -> None:
+    await _runMission13()
+    await _runMission12()
 
 
 async def main():
     RW.initializeRobot(name="Misty", mainPortLeft=port.A, mainPortRight=port.B)
 
     #await runMission7_6_11()
-    await _runMission13()
-    await _runMission12()
+    await runMission13_12()
+    
+    
+    
+    #right home base to left home base
+    #await RW.arcTurnLeft(32, 90, velocityPercentage=20)
+    #await RW.moveForwardGyro(4, velocityPercentage=40)  
+    #await RW.proportionalSpinTurnLeft(45)
+    #await RW.moveForward(1.4, velocityPercentage=40)
     
 
 

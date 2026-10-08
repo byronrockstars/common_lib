@@ -9,10 +9,10 @@ async def _runMission7() -> None:
     #Mission 7 (Humongous Fungus)
     await RW.moveStraightUntilLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, lineColor=color.BLACK, velocityPercentage=30)
     #await RW.moveForwardGyro(stoppingRotations=2.5, velocityPercentage=30) #could use wheel rotations instead of black line
-
-    await RW.moveBackwardGyro(stoppingRotations=0.45, velocityPercentage=25)
-    await RW.proportionalSpinTurnRight(degreesToTurn=15)
-    await RW.proportionalSpinTurnLeft(degreesToTurn=15)
+    await RW.moveForwardGyro(0.1, velocityPercentage=5)
+    await RW.moveBackwardGyro(stoppingRotations=0.55, velocityPercentage=10)
+    # await RW.proportionalSpinTurnRight(degreesToTurn=15)
+    # await RW.proportionalSpinTurnLeft(degreesToTurn=15)
 
     return
 
@@ -23,7 +23,7 @@ async def _runMission6() -> None:
     await RW.proportionalSpinTurnLeft(degreesToTurn=90)
 
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, velocityPercentage=8) #before derivative correction
-    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1,  derivativeCorrectionCoef=3.0, velocityPercentage=8)
+    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1,derivativeCorrectionCoef=3.0, velocityPercentage=8)
     await RW.proportionalSpinTurnLeft(degreesToTurn=85)
     await RW.moveBackward(0.75, velocityPercentage=10)
     await RW.moveForwardGyro(0.75, velocityPercentage=50, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
@@ -52,7 +52,7 @@ async def _runMission13() -> None:
     await RW.moveForwardGyro(0.25, velocityPercentage=30)
     return
 
-    
+
 async def _runMission12() -> None:
     #Mission 12 (Forest Elder)
     await motor.run_for_degrees(port.D, -120, 400)
@@ -71,16 +71,17 @@ async def main():
     RW.initializeRobot(name="Misty", mainPortLeft=port.A, mainPortRight=port.B)
 
     #await runMission7_6_11()
-    await runMission13_12()
-    
-    
-    
+    # await runMission13_12()
+    await _runMission7()
+
+
+
     #right home base to left home base
     #await RW.arcTurnLeft(32, 90, velocityPercentage=20)
-    #await RW.moveForwardGyro(4, velocityPercentage=40)  
+    #await RW.moveForwardGyro(4, velocityPercentage=40)
     #await RW.proportionalSpinTurnLeft(45)
     #await RW.moveForward(1.4, velocityPercentage=40)
-    
+
 
 
 runloop.run(main())

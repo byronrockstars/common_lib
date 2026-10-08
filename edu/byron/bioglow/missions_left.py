@@ -1,5 +1,5 @@
 from hub import port
-import runloop
+import runloop, time
 import Combined as RW
 import motor
 
@@ -20,10 +20,31 @@ async def runMission1() -> None:
 
 
 async def runMission2() -> None:
+    #Mission 3 (Flip the Rock)
+    await RW.moveForward(rotations=2.38, velocityPercentage=40)
+    await RW.moveBackward(rotations=2.38, velocityPercentage=40, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
     #Mission 2 (Exploding Seeds)
-    motor.run_for_degrees(port.C, 1000, 1110) #1110 is 100% velocity on a medium motor
+    await motor.run_for_degrees(port.C, -400, 1110)
+    await RW.pivotTurnRight(46)
+    await RW.moveForward(rotations=2.2, velocityPercentage=100)
+    await motor.run_for_degrees(port.C, 400, 1110) #1110 is 100% velocity on a medium motor
+    #time.sleep(0.5)
+    await RW.moveForward(rotations=-2.2, velocityPercentage=100)
+     #1110 is 100% velocity on a medium motor
     return
-    
+
+async def runMission1and2():
+    #Mission 2 (Exploding Seeds)
+    motor.run_for_degrees(port.C, -1200, 1110)
+    await RW.pivotTurnRight(46)
+    await RW.moveForward(rotations=2.25, velocityPercentage=100)
+    await motor.run_for_degrees(port.C, 400, 1110) #1110 is 100% velocity on a medium motor
+    #time.sleep(0.5)
+    await RW.moveForward(rotations=-2, velocityPercentage=100)
+    motor.run_for_degrees(port.C, -400, 1110)
+     #1110 is 100% velocity on a medium motor
+    return
+
 
 async def main():
 
@@ -35,6 +56,7 @@ async def main():
 
     #await runMission1()
     #await runMission3()
+    await motor.run_for_degrees(port.C, 1200, 1110)
     await runMission2()
 
 runloop.run(main())

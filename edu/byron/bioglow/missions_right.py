@@ -5,14 +5,22 @@ import motor
 import Combined as RW
 
 
-async def _runMission7() -> None:
-    #Mission 7 (Humongous Fungus)
-    
+async def _runMission7Alt() -> None:
+    #Mission 7 (Humongous Fungus) -> Uses move forward until black line (no gyro)
     await RW.moveForwardGyro(stoppingRotations=3.5, velocityPercentage=30)
     await RW.moveStraightUntilLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, lineColor=color.BLACK, velocityPercentage=30)
-    #await RW.moveForwardGyro(stoppingRotations=2.5, velocityPercentage=30) #could use wheel rotations instead of black line
     await RW.moveForwardGyro(0.03, velocityPercentage=5)
     await RW.moveBackwardGyro(stoppingRotations=0.6, velocityPercentage=10)  #still testing this as it was 0.55 before
+    await RW.proportionalSpinTurnRight(degreesToTurn=15, velocityPercentage=20)
+    await RW.proportionalSpinTurnLeft(degreesToTurn=12, velocityPercentage=20)
+
+    return
+    
+    
+async def _runMission7() -> None:
+    #Mission 7 (Humongous Fungus)
+    await RW.moveForwardGyro(stoppingRotations=4.02, velocityPercentage=30)
+    await RW.moveBackwardGyro(stoppingRotations=0.7, velocityPercentage=10)  #still testing this as it was 0.55 before
     await RW.proportionalSpinTurnRight(degreesToTurn=15, velocityPercentage=20)
     await RW.proportionalSpinTurnLeft(degreesToTurn=12, velocityPercentage=20)
 
@@ -81,7 +89,5 @@ async def main():
     #await RW.moveForwardGyro(4, velocityPercentage=40)
     #await RW.proportionalSpinTurnLeft(45)
     #await RW.moveForward(1.4, velocityPercentage=40)
-
-
 
 runloop.run(main())

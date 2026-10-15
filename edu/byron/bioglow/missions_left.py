@@ -19,15 +19,15 @@ async def runMission1() -> None:
     return
 
 
-async def runMission1and2() -> None:
+async def runMission2and3() -> None:
     #Mission 3 (Flip the Rock)
-    await RW.moveForward(rotations=2.38, velocityPercentage=40)
+    await RW.moveForward(rotations=2.40, velocityPercentage=50, acceleration=10000, deceleration=4000)
     motor.run_for_degrees(port.C, -1600, 1110) # New addition
-    await RW.moveBackward(rotations=2.39, velocityPercentage=40, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
+    await RW.moveBackward(rotations=2.39, velocityPercentage=100, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
     #Mission 2 (Exploding Seeds)
     #await motor.run_for_degrees(port.C, -1600, 1110) # Originally here
-    await RW.pivotTurnRight(45) # Angle was too much
-    await RW.moveForward(rotations=2.2, velocityPercentage=100)
+    await RW.pivotTurnRight(46) # Angle was too much
+    await RW.moveForward(rotations=2.2, velocityPercentage=60)
     await motor.run_for_degrees(port.C, 800, 1110) #1110 is 100% velocity on a medium motor # maybe too high
     #time.sleep(0.5)
     await RW.moveForward(rotations=-2.3, velocityPercentage=100)
@@ -57,7 +57,7 @@ async def main():
     #await runMission1()
     #await runMission3()
     motor.run_for_degrees(port.C, 1600, 1110)
-    await runMission1and2()
+    await runMission2and3()
     await motor.run_for_degrees(port.C, -800, 1110)
 
 runloop.run(main())

@@ -81,7 +81,7 @@ async def spinTurn1(degreesToTurn, velocity) -> None:
     return
 
 
-async def arcTurn1(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
+async def arcTurn(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
     '''Completes an arc turn up to 179 degrees. \n 
             Input parameters:   
                 radiusInCm: radius of circle (in centimeters) that robot moves while making its arc turn. A value of 0 equates to a spin turn (use dedicated spin turn functions instead).
@@ -131,18 +131,25 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
     time.sleep(0.1) #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable)
 
+    minTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.15
+    maxTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.40
+
     startTime = time.ticks_ms()
-    print("Start time: ", startTime)
 
     #convert timeout (in seconds) to milliseconds and compare to amount of time that has gone by
     while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
-
         if(degreesToTurn > 0):
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
         turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/40  #pivot turns are slower so take a larger percentage of the max velocity 
+
+        #Don't let velocity get too low or robot will have a hitch. Too fast will cause inaccurate turns.
+        if(turnPower < minTurnPower):
+            turnPower = minTurnPower
+        elif(turnPower > maxTurnPower):
+            turnPower = maxTurnPower
 
         if(degreesToTurn > 0):
             motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0) #right turn
@@ -162,23 +169,25 @@ async def proportionalPivotTurn(degreesToTurn, velocityPercentage = 40, timeout 
     return
 
 
-async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout = 2.0) -> None:
+async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 25, timeout = 2.0) -> None:
     '''Complete a spin turn and slow down as the turn completes to ensure accuracy. \n
         Input parameters:
             degreesToTurn: positive value if turning to right and negative if turning to left (-179 to 179)
             velocityPercentage (optional): how fast to complete the turn in percentage (1 to 100)
             timeout (optional): maximum number of seconds to allow turn to complete. If turn doesn't complete in this time, stop the turn when timeout is reached.
     '''
-    
+
     print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
 
     motion_sensor.reset_yaw(0)
-    time.sleep(0.1) #reset yaw can take a bit of time to complete
+    time.sleep(0.1)  #reset yaw can take a bit of time to complete
     #await runloop.until(motion_sensor.stable)
 
-    startTime = time.ticks_ms()
-    print("Start time: ", startTime)
+    minTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.10  
+    maxTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.35  
 
+    startTime = time.ticks_ms()
+    
     #convert timeout (in seconds) to milliseconds and compare to amount of time that has gone by
     while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
 
@@ -187,10 +196,17 @@ async def proportionalSpinTurn(degreesToTurn, velocityPercentage = 30, timeout =
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
 
-        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/50
+        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/60 
+        #print("TurnPower = ", turnPower)
+
+        #Don't let velocity get too low or robot will have a hitch. Too fast will cause inaccurate turns.
+        if(turnPower < minTurnPower):
+            turnPower = minTurnPower
+        elif(turnPower > maxTurnPower):
+            turnPower = maxTurnPower
 
         if(degreesToTurn > 0):
-            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1* int(turnPower)) #right turn
+            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1*int(turnPower)) #right turn
         else:
             motor_pair.move_tank(motor_pair.PAIR_1, -1*int(turnPower), int(turnPower)) #left turn
 
@@ -468,6 +484,24 @@ async def squareUpOnLine1(leftLightSensorPort, rightLightSensorPort, lineColor, 
             print("Line color of " + str(lineColor) + " is invalid.")
     
     return
+
+
+async def squareUpOnWall(seconds=1.0, velocityPercentage=100, acceleration=1000, deceleration=1000) -> None:
+    '''Squares up on wall by running wheels for number of seconds.
+        Input parameters:
+            seconds: Number of seconds to run wheels for. 
+            velocityPercentage (optional): 0% to 100%.
+            acceleration (optional): (deg/sec^2) Default is 1000.
+            deceleration (optional): (deg/sec^2) Default is 1000.
+    '''
+
+    milliSeconds = seconds * 1000
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    
+    await motor_pair.move_for_time(motor_pair.PAIR_1, int(milliSeconds), 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
+
+    return
+
 
 
 async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef = 0.0, derivativeCorrectionCoef = 0.0, velocityPercentage=10, acceleration=500) -> None:

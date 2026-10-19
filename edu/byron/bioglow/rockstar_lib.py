@@ -494,6 +494,7 @@ async def squareUpOnWall(seconds=1.0, velocityPercentage=100, acceleration=1000,
             acceleration (optional): (deg/sec^2) Default is 1000.
             deceleration (optional): (deg/sec^2) Default is 1000.
     '''
+    print("SquareUpOnWall. Seconds = " + str(seconds) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ", and deceleration = " + str(deceleration) + ".")
 
     milliSeconds = seconds * 1000
     velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
@@ -501,7 +502,6 @@ async def squareUpOnWall(seconds=1.0, velocityPercentage=100, acceleration=1000,
     await motor_pair.move_for_time(motor_pair.PAIR_1, int(milliSeconds), 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
 
     return
-
 
 
 async def pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef = 0.0, derivativeCorrectionCoef = 0.0, velocityPercentage=10, acceleration=500) -> None:

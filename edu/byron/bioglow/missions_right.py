@@ -44,7 +44,7 @@ async def _runMission6(forwardRotations=0.51) -> None:
     await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=20)
 
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, velocityPercentage=8) #before derivative correction
-    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=8)
+    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=10)
     await RW.proportionalSpinTurnLeft(degreesToTurn=85)
     await RW.moveBackward(0.8, velocityPercentage=10)
     await RW.moveForwardGyro(forwardRotations, velocityPercentage=50, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
@@ -98,14 +98,18 @@ async def runMission13_12() -> None:
     await _runMission13()
     await _runMission12()
 
-
+async def _runMission15() -> None:
+    # Biocentric Architecture
+    await RW.moveForwardGyro(1.2 , velocityPercentage=25)
+    await RW.moveBackwardGyro(2, velocityPercentage=100)
+    return
 async def main():
     RW.initializeRobot(name="Misty", mainPortLeft=port.A, mainPortRight=port.B)
-    
-    await _runMission7()
-    await _runMission6()
-    # await runMission7_6_11()
-    #await runMission13_12()
+    # await _runMission15()
+    # await _runMission7()
+    # await _runMission6()
+    await runMission7_6_11()
+    # await runMission13_12()
 
     #await runMission6_11()
 

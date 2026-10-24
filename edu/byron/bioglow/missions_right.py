@@ -31,11 +31,11 @@ async def _runMission7() -> None:
     #Mission 7 (Humongous Fungus)
 
     motor.run_for_degrees(port.C, 500, 1110)
-    await RW.moveForwardGyro(3.5000000000000, velocityPercentage=60)
+    await RW.moveForwardGyro(3.5, velocityPercentage=60)
     await motor.run_for_degrees(port.C, 1400, 1110)
     await RW.moveForwardGyro(0.2, velocityPercentage=40)
     motor.run_for_degrees(port.C, 600, 1110)
-    await RW.moveBackwardGyro(stoppingRotations=0.4, velocityPercentage=50)
+    await RW.moveBackwardGyro(stoppingRotations=0.15, velocityPercentage=50)
     return
 
 async def _runMission6(forwardRotations=0.51) -> None:
@@ -44,9 +44,9 @@ async def _runMission6(forwardRotations=0.51) -> None:
     await RW.proportionalSpinTurnLeft(degreesToTurn=90, velocityPercentage=20)
 
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, velocityPercentage=8) #before derivative correction
-    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=10)
+    await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=8)
     await RW.proportionalSpinTurnLeft(degreesToTurn=85)
-    await RW.moveBackward(0.8, velocityPercentage=10)
+    await RW.moveBackward(0.95, velocityPercentage=10)
     await RW.moveForwardGyro(forwardRotations, velocityPercentage=50, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
 
     return
@@ -109,7 +109,7 @@ async def main():
     # await _runMission7()
     # await _runMission6()
     await runMission7_6_11()
-    # await runMission13_12()
+    #await runMission13_12()
 
     #await runMission6_11()
 

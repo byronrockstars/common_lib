@@ -50,51 +50,40 @@ async def runMission1() -> None:
     #await RW.moveForward(rotations=3, velocityPercentage=100, acceleration=10000, deceleration=4000)
     return
 
-async def runMission2():
+
+async def _runMission2():
     #Mission 2 (Exploding Seeds)
-    await RW.pivotTurnRight(35)
+    #await RW.pivotTurnRight(35)
+    await RW.proportionalPivotTurnRight(degreesToTurn=35, velocityPercentage=25)
     await RW.moveForwardGyro(1.78, 100)
-    #await RW.moveForward(rotations=2.25, velocityPercentage=100)
     await motor.run_for_degrees(port.C, 1000, 1110) #1110 is 100% velocity on a medium motor
-    #time.sleep(0.5)
-    await RW.moveForward(rotations=-2, velocityPercentage=100)
+    await RW.moveBackward(rotations=2, velocityPercentage=100)
     motor.run_for_degrees(port.C, -1000, 1110)
-    await RW.moveBackward(1, velocityPercentage=100)
+    await RW.moveBackward(1, velocityPercentage=100) #squares up against wall
 
     return
 
-async def runMission3() -> None:
+
+async def _runMission3() -> None:
     #Mission 3 (Flip the Rock)
     #19.6035381584 WHEEL CIRCUMFERENCE
-    motor.run_for_degrees(port.C, 2000, 1110) #was 1600 
-    time.sleep(0.5)
+    motor.run_for_degrees(port.C, 2000, 1110) #was 1600
+    time.sleep(0.5) #motor needs a bit of time to raise the attachment
+    
     #don't need gyro correction because masher aligns
     await RW.moveForward(rotations=2.38, velocityPercentage=100, acceleration=5000, deceleration=1000)
     motor.run_for_degrees(port.C, -1800, 1110)
-    #await RW.moveBackwardGyro(2.41, 30) #this is best if combining with another mission 
     
     #this works if running alone
     await RW.moveBackward(rotations=2.41, velocityPercentage=100, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
-    
-    #await RW.moveBackwardGyro(2.41, 30)
+    #await RW.moveBackwardGyro(2.41, 30) #this is best if combining with another mission
 
     return
 
 async def runMission2and3() -> None:
-    #Mission 3 (Flip the Rock)
-    motor.run_for_degrees(port.C, 1600, 1110)
-    await RW.moveForwardGyro(2.40, velocityPercentage=80, acceleration=1000)
-    motor.run_for_degrees(port.C, -1600, 1110)
-    await RW.moveBackwardGyro(2.39, velocityPercentage=40, acceleration=10000)#acceleration/deceleration of 10,000 is max
-    await RW.moveBackwardGyro(0.5, velocityPercentage=100) #square up against wall
-
-    #Mission 2 (Exploding Seeds)
-    await RW.pivotTurnRight(42) # Angle was too much
-    await RW.moveForwardGyro(2.35, velocityPercentage=40, correctionMultiplier=-1.5)
-    await motor.run_for_degrees(port.C, 850, 1110) #1110 is 100% velocity on a medium motor # maybe too high
-    #time.sleep(0.5)
-    await RW.moveForwardGyro(-2.35, velocityPercentage=40, correctionMultiplier=-1.5)
-    await motor.run_for_degrees(port.C, -800, 1110)
+    await _runMission2()
+    time.sleep(2)
+    await _runMission3()
     return
 
 
@@ -105,14 +94,8 @@ async def main():
         mainPortRight=port.B
     )
 
+    #await runMission2and3()
+    
     await runMission1()
     
-    
-    #await runMission2()
-    #time.sleep(2)
-    #await runMission3()
-    
-
-    #await runMission2and3()
-
 runloop.run(main())

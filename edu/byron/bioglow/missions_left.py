@@ -40,7 +40,7 @@ def __turnCompleted(degreesToTurn) -> bool:
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
 
-async def runMission1() -> None:
+async def _runMission1() -> None:
     #Mission 1 (Drone Survey)
     await RW.moveForward(rotations=4.76, velocityPercentage=100)
     await RW.moveBackward(rotations=2.1, velocityPercentage=100)
@@ -52,13 +52,15 @@ async def runMission1() -> None:
 
 
 async def _runMission2():
-    #Mission 2 (Exploding Seeds)
-    #await RW.pivotTurnRight(35)
-    await RW.proportionalPivotTurnRight(degreesToTurn=35, velocityPercentage=25)
-    await RW.moveForwardGyro(1.78, 100)
-    await motor.run_for_degrees(port.C, 1000, 1110) #1110 is 100% velocity on a medium motor
-    await RW.moveBackward(rotations=2, velocityPercentage=100)
-    motor.run_for_degrees(port.C, -1000, 1110)
+    ##Mission 2 (Exploding Seeds)
+    ##await RW.pivotTurnRight(35)
+    await RW.proportionalPivotTurnRight(degreesToTurn=40, velocityPercentage=25)
+    await RW.moveForwardGyro(1.8, 100)
+    await motor.run_for_degrees(port.C, 980, 1000) #1110 is 100% velocity on a medium motor
+    #await RW.moveBackward(rotations=2, velocityPercentage=100)
+    await RW.moveBackward(rotations=2, velocityPercentage=100, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
+
+    motor.run_for_degrees(port.C, -980, 1110)
     await RW.moveBackward(1, velocityPercentage=100) #squares up against wall
 
     return
@@ -69,11 +71,11 @@ async def _runMission3() -> None:
     #19.6035381584 WHEEL CIRCUMFERENCE
     motor.run_for_degrees(port.C, 2000, 1110) #was 1600
     time.sleep(0.5) #motor needs a bit of time to raise the attachment
-    
+
     #don't need gyro correction because masher aligns
     await RW.moveForward(rotations=2.38, velocityPercentage=100, acceleration=5000, deceleration=1000)
     motor.run_for_degrees(port.C, -1800, 1110)
-    
+
     #this works if running alone
     await RW.moveBackward(rotations=2.41, velocityPercentage=100, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
     #await RW.moveBackwardGyro(2.41, 30) #this is best if combining with another mission
@@ -86,6 +88,13 @@ async def runMission2and3() -> None:
     await _runMission3()
     return
 
+async def runMission2and3and1() -> None:
+    await _runMission2()
+    time.sleep(2)
+    await _runMission3()
+    time.sleep(10)
+    await _runMission1()
+    return
 
 async def main():
     robot = RW.initializeRobot(
@@ -94,8 +103,11 @@ async def main():
         mainPortRight=port.B
     )
 
+    #await _runMission3()
+    
     #await runMission2and3()
-    
-    await runMission1()
-    
+
+    #await runMission1()
+    await runMission2and3and1()
+
 runloop.run(main())

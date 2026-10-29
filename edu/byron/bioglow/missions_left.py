@@ -40,7 +40,7 @@ def __turnCompleted(degreesToTurn) -> bool:
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
 
-async def runMission1() -> None:
+async def _runMission1() -> None:
     #Mission 1 (Drone Survey)
     await RW.moveForward(rotations=4.76, velocityPercentage=100)
     await RW.moveBackward(rotations=2.1, velocityPercentage=100)
@@ -88,6 +88,13 @@ async def runMission2and3() -> None:
     await _runMission3()
     return
 
+async def runMission2and3and1() -> None:
+    await _runMission2()
+    time.sleep(2)
+    await _runMission3()
+    time.sleep(10)
+    await _runMission1()
+    return
 
 async def main():
     robot = RW.initializeRobot(
@@ -98,9 +105,9 @@ async def main():
 
     #await _runMission3()
     
-
-    await runMission2and3()
+    #await runMission2and3()
 
     #await runMission1()
+    await runMission2and3and1()
 
 runloop.run(main())

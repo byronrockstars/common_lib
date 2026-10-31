@@ -43,11 +43,11 @@ def __turnCompleted(degreesToTurn) -> bool:
 async def _runMission1() -> None:
     #Mission 1 (Drone Survey)
     await RW.moveForward(rotations=4.76, velocityPercentage=100)
-    await RW.moveBackward(rotations=2.1, velocityPercentage=100)
-    await RW.pivotTurnLeft(23.5)
+    await RW.moveBackward(rotations=2.2, velocityPercentage=100)
+    await RW.pivotTurnLeft(23.56)
     await RW.moveForward(rotations=2.95, velocityPercentage=100)
     await carTurn(degreesToTurn=45)
-    #await RW.moveForward(rotations=3, velocityPercentage=100, acceleration=10000, deceleration=4000)
+    await RW.moveForward(rotations=3, velocityPercentage=100, acceleration=10000, deceleration=4000)
     return
 
 

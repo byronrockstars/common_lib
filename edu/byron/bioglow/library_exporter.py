@@ -65,51 +65,62 @@ async def _arcTurn(radiusInCm, degreesToTurn, velocityPercentage=20) -> None:
     return
 
 async def _proportionalPivotTurn(degreesToTurn, velocityPercentage=40, timeout=2.0) -> None:
-    print('Proportional Pivot Turn. DegreesToTurn = ' + str(degreesToTurn) + '. velocityPercentage = ' + str(velocityPercentage) + ', timeout(seconds) = ' + str(timeout))
+    print("Proportional Pivot Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
     motion_sensor.reset_yaw(0)
-    time.sleep(0.1)
+    time.sleep(0.1) #reset yaw can take a bit of time to complete
+    minTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.15
+    maxTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.40
     startTime = time.ticks_ms()
-    print('Start time: ', startTime)
-    while time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000:
-        if degreesToTurn > 0:
+    while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
+        if(degreesToTurn > 0):
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
-        turnPower = turnError * velocityPercentage / 100 * WHEEL_MOTOR_MAX_VELOCITY / 40
-        if degreesToTurn > 0:
-            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0)
+        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/40  
+        if(turnPower < minTurnPower):
+            turnPower = minTurnPower
+        elif(turnPower > maxTurnPower):
+            turnPower = maxTurnPower
+        if(degreesToTurn > 0):
+            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), 0) #right turn
         else:
-            motor_pair.move_tank(motor_pair.PAIR_1, 0, int(turnPower))
-        if __turnCompleted(degreesToTurn):
-            print('Turn completed!')
+            motor_pair.move_tank(motor_pair.PAIR_1, 0, int(turnPower)) #left turn
+        if(__turnCompleted(degreesToTurn)):
+            print("Turn completed!")
             break
-    print('Time out!')
+    print("Time out!")
     motor_pair.stop(motor_pair.PAIR_1)
-    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
     return
 
-async def _proportionalSpinTurn(degreesToTurn, velocityPercentage=30, timeout=2.0) -> None:
-    print('Proportional Spin Turn. DegreesToTurn = ' + str(degreesToTurn) + '. velocityPercentage = ' + str(velocityPercentage) + ', timeout(seconds) = ' + str(timeout))
+async def _proportionalSpinTurn(degreesToTurn, velocityPercentage=25, timeout=2.0) -> None:
+    print("Proportional Spin Turn. DegreesToTurn = " + str(degreesToTurn) + ". velocityPercentage = " + str(velocityPercentage) + ", timeout(seconds) = " + str(timeout))
     motion_sensor.reset_yaw(0)
-    time.sleep(0.1)
+    time.sleep(0.1)  #reset yaw can take a bit of time to complete
+    minTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.10  
+    maxTurnPower = WHEEL_MOTOR_MAX_VELOCITY * 0.35  
     startTime = time.ticks_ms()
-    print('Start time: ', startTime)
-    while time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000:
-        if degreesToTurn > 0:
+    while (time.ticks_diff(time.ticks_ms(), startTime) < timeout * 1000):
+        if(degreesToTurn > 0):
             turnError = degreesToTurn - motion_sensor.tilt_angles()[0] * -0.1
         else:
             turnError = motion_sensor.tilt_angles()[0] * -0.1 - degreesToTurn
-        turnPower = turnError * velocityPercentage / 100 * WHEEL_MOTOR_MAX_VELOCITY / 50
-        if degreesToTurn > 0:
-            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1 * int(turnPower))
+        turnPower = turnError * velocityPercentage/100 * WHEEL_MOTOR_MAX_VELOCITY/60 
+        #print("TurnPower = ", turnPower)
+        if(turnPower < minTurnPower):
+            turnPower = minTurnPower
+        elif(turnPower > maxTurnPower):
+            turnPower = maxTurnPower
+        if(degreesToTurn > 0):
+            motor_pair.move_tank(motor_pair.PAIR_1, int(turnPower), -1*int(turnPower)) #right turn
         else:
-            motor_pair.move_tank(motor_pair.PAIR_1, -1 * int(turnPower), int(turnPower))
-        if __turnCompleted(degreesToTurn):
-            print('Turn completed!')
+            motor_pair.move_tank(motor_pair.PAIR_1, -1*int(turnPower), int(turnPower)) #left turn
+        if(__turnCompleted(degreesToTurn)):
+            print("Turn completed!")
             break
     motor_pair.stop(motor_pair.PAIR_1)
-    print('Time out!')
-    print('Degrees turned: ', motion_sensor.tilt_angles()[0] * -0.1)
+    print("Time out!")
+    print("Degrees turned: ", motion_sensor.tilt_angles()[0] * -0.1)
     return
 
 async def _moveForward(stoppingRotations, velocityPercentage, acceleration=500, deceleration=1000) -> None:
@@ -255,6 +266,13 @@ async def _squareUpOnLine(leftLightSensorPort, rightLightSensorPort, lineColor, 
                 rightSensorFoundLine = True
         else:
             print('Line color of ' + str(lineColor) + ' is invalid.')
+    return
+    
+async def squareUpOnWall(seconds=1.0, velocityPercentage=100, acceleration=1000, deceleration=1000) -> None:
+    print("SquareUpOnWall. Seconds = " + str(seconds) + ", velocityPercentage = " + str(velocityPercentage) + ", acceleration = " + str(acceleration) + ", and deceleration = " + str(deceleration) + ".")
+    milliSeconds = seconds * 1000
+    velocity = WHEEL_MOTOR_MAX_VELOCITY * velocityPercentage/100
+    await motor_pair.move_for_time(motor_pair.PAIR_1, int(milliSeconds), 0, velocity=int(velocity), stop=motor.BRAKE, acceleration=acceleration, deceleration=deceleration)
     return
 
 async def _pidBlackLineFollow(rotationsToMove, lightSensorPort, midPointReflectionPercentage, edgeToFollow, proportionalCorrectionCoef=0.15, integralCorrectionCoef=0.0, derivativeCorrectionCoef=0.0, velocityPercentage=10, acceleration=500) -> None:

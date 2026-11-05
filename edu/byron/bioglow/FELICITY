@@ -55,13 +55,53 @@ async def _runMission13() -> None:
 async def main():
     print("Starting program.")
     motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)  #Misty
+	
+	#mission selector
+    waitingForSelection = True
+    missionSelected = 0
+
+    colors = [color.GREEN, color.AZURE, color.ORANGE, color.MAGENTA, color.YELLOW, color.PURPLE]
+    hub.light.color(0, colors[missionSelected]) #set center button start color
+    hub.light.color(1, colors[missionSelected]) #set bluetooth button start color
+
+    while(waitingForSelection):
+        if(hub.button.pressed(hub.button.RIGHT)): #right arrow (2) increases the mission number
+            time.sleep(0.25) #prevent accidental doubleclicks
+            missionSelected = missionSelected + 1
+            hub.light_matrix.write(str(missionSelected))
+            hub.light.color(0, colors[missionSelected % 6]) #set center button color from color array
+            hub.light.color(1, colors[missionSelected % 6]) #set bluetooth button color from color array
+            hub.sound.beep(freq=85, volume=100, duration=250)
+        elif(hub.button.pressed(hub.button.LEFT)): #left arrow (0) decreases the mission number
+            time.sleep(0.25) #prevent accidental doubleclicks
+            missionSelected = missionSelected - 1
+            hub.light_matrix.write(str(missionSelected))
+            hub.light.color(0, colors[missionSelected % 6]) #set center button color from color array
+            hub.light.color(1, colors[missionSelected % 6]) #set bluetooth button color from color array
+            hub.sound.beep(freq=300, volume=100, duration=250)
+        elif(hub.button.pressed(3)): #bluetooth button is used to run each mission
+            if missionSelected == 1:
+                print("Running mission 1.")
+                #call mission 1
+                await runMission7_6_11()
+            elif missionSelected == 2:
+                print("Running mission 2.")
+                #call mission 2
+                #await runMission13_12()
+            elif missionSelected == 3:
+                print("Running mission 3.")
+                #call mission 3
+                #await runMission6_11()
+            elif missionSelected == 4:
+                print("Running mission 4.")
+                #call mission 4
+
     
 	#await runMission7_6_11()
-	
-	await _runMission13()
+	#await _runMission13()
 	
 	# Mission 12 (Forest Elder)
-    await motor.run_for_degrees(port.D, -180, 500)
+    #await motor.run_for_degrees(port.D, -180, 500)
         
     return
 	

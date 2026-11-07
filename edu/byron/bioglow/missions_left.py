@@ -1,11 +1,11 @@
 from hub import port, motion_sensor
-import runloop, time
+import runloop, time, motor, motor_pair, color, hub
 import Combined as RW
-import motor, motor_pair
+
 
 # works 11/4/26
 async def carTurn(degreesToTurn, velocity=554) -> None:
-    '''Completes a pivot turn up to 179 degrees. \n
+    '''Completes a fixed radius arc turn up to 179 degrees. \n
             Input parameters:
                 degreesToTurn: positive value if turning to right and negative if turning to left
                 velocity: (deg/sec) Medium motor range = -1110 to 1110
@@ -39,6 +39,7 @@ def __turnCompleted(degreesToTurn) -> bool:
     #multiplying by -0.1 makes yaw angle match values in hub
     return abs(motion_sensor.tilt_angles()[0] * -0.1) >= abs(degreesToTurn)
 
+
 async def _runMission1() -> None:
     #Mission 1 (Drone Survey)
     await RW.moveForward(rotations=4.76, velocityPercentage=100)
@@ -52,11 +53,9 @@ async def _runMission1() -> None:
 
 async def _runMission2():
     ##Mission 2 (Exploding Seeds)
-    ##await RW.pivotTurnRight(35)
     await RW.proportionalPivotTurnRight(degreesToTurn=40, velocityPercentage=25)
     await RW.moveForwardGyro(1.8, 100)
     await motor.run_for_degrees(port.C, 980, 1000) #1110 is 100% velocity on a medium motor
-    #await RW.moveBackward(rotations=2, velocityPercentage=100)
     await RW.moveBackward(rotations=2, velocityPercentage=100, acceleration=10000, deceleration=4000) #acceleration/deceleration of 10,000 is max
 
     motor.run_for_degrees(port.C, -980, 1110)
@@ -81,11 +80,6 @@ async def _runMission3() -> None:
 
     return
 
-async def runMission2and3() -> None:
-    await _runMission2()
-    time.sleep(2)
-    await _runMission3()
-    return
 
 async def runMission2and3and1() -> None:
     await _runMission2()
@@ -95,18 +89,48 @@ async def runMission2and3and1() -> None:
     await _runMission1()
     return
 
+
 async def main():
-    robot = RW.initializeRobot(
-        name="Misty",
-        mainPortLeft=port.A,
-        mainPortRight=port.B
-    )
+    robot = RW.initializeRobot(name="Misty", mainPortLeft=port.A, mainPortRight=port.B)
 
-    #await _runMission3()
-    
-    #await runMission2and3()
+    #mission selector
+    waitingForSelection = True
+    missionSelected = 0
 
-    #await runMission1()
-    await runMission2and3and1()
+    colors = [color.GREEN, color.AZURE, color.ORANGE, color.MAGENTA, color.YELLOW, color.PURPLE]
+    alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
+    hub.light.color(0, colors[missionSelected]) #set center button start color
+    hub.light.color(1, colors[missionSelected]) #set bluetooth button start color
+    hub.light_matrix.write(str(alphabet[missionSelected]))
 
+    while(waitingForSelection):
+        if(hub.button.pressed(hub.button.RIGHT)): #right arrow (2) increases the mission number
+            time.sleep(0.25) #prevent accidental doubleclicks
+            missionSelected = missionSelected + 1
+            hub.light_matrix.write(str(alphabet[missionSelected % 14])) #show letters for each mission so it is different than program number
+            hub.light.color(0, colors[missionSelected % 6]) #set center button color from color array
+            hub.light.color(1, colors[missionSelected % 6]) #set bluetooth button color from color array
+            hub.sound.beep(freq=85, volume=100, duration=250)
+        elif(hub.button.pressed(hub.button.LEFT)): #left arrow (0) decreases the mission number
+            time.sleep(0.25) #prevent accidental doubleclicks
+            missionSelected = missionSelected - 1
+            hub.light_matrix.write(str(alphabet[missionSelected % 14])) #show letters for each mission so it is different than program number
+            hub.light.color(0, colors[missionSelected % 6]) #set center button color from color array
+            hub.light.color(1, colors[missionSelected % 6]) #set bluetooth button color from color array
+            hub.sound.beep(freq=300, volume=100, duration=250)
+        elif(hub.button.pressed(3)): #bluetooth button is used to run each mission
+            if missionSelected == 0:
+                print("Running mission 0.")
+                await runMission2and3and1()
+            elif missionSelected == 1:
+                print("Running mission 1.")
+                await _runMission3()
+            elif missionSelected == 2:
+                print("Running mission 2.")
+                await _runMission1()
+            elif missionSelected == 3:
+                print("Running mission 3.")
+                #call mission 3
+
+    #await runMission2and3and1()
 runloop.run(main())

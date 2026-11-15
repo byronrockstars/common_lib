@@ -48,8 +48,6 @@ async def runMission7_6_11() -> None:
 
 async def runMission7Only() -> None:
     await _runMission7()
-    #TODO: return to home base
-    #await RW.moveBackwardGyro(stoppingRotations=3.5, velocityPercentage=100, acceleration=10000)
     await RW.moveBackward(rotations=3.5, velocityPercentage=100, acceleration=10000, deceleration=4000)
     return
 
@@ -64,12 +62,13 @@ async def runMission6_11() -> None:
 
 
 async def runMission11Only() -> None:
-    #TODO: write this code
-    await RW.moveForwardGyro(2, velocityPercentage=75, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
-    #await RW.proportionalSpinTurnLeft(degreesToTurn=160, velocityPercentage=25)
+    #Mission 11 (Window to the Past) -> No attachments needed for this rerun
+    motor.run_for_degrees(port.C, 2500, 1110)  # lifts motorized attachment out of the way as it is not needed for this
+    await RW.moveForwardGyro(3.4, velocityPercentage=75, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5) 
     await RW.arcTurnLeft(8, 175, velocityPercentage=50)
-    await RW.moveForwardGyro(1.75, velocityPercentage=75, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
-
+    await RW.moveForwardGyro(0.2, velocityPercentage=25) 
+    await RW.arcTurnLeft(2, 25, velocityPercentage=25) 
+    await RW.moveForward(2.8, velocityPercentage=75)
     return
 
 
@@ -97,8 +96,9 @@ async def runMission13_12() -> None:
 
 async def runMission15() -> None:
     # Biocentric Architecture
-    await RW.moveForwardGyro(1.2 , velocityPercentage=25) #TOOD: try moving this faster (also maybe farther if mission doesn't break to allow for slack in line up)
-    await RW.moveBackwardGyro(2, velocityPercentage=100)
+    await RW.moveForwardGyro(1.25, velocityPercentage=25)  
+    time.sleep(0.25)
+    await RW.moveBackwardGyro(stoppingRotations=1.75, velocityPercentage=60, acceleration=8000)
     return
 
 

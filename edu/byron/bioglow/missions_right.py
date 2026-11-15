@@ -24,6 +24,7 @@ async def _runMission6(forwardRotations=0.51) -> None:
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=8)
     await RW.moveForwardGyro(1.7, velocityPercentage=50, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
     await RW.proportionalSpinTurnRight(degreesToTurn=110)
+    time.sleep(0.25) 
     await RW.squareUpOnBlackLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, velocityPercentage=15, acceleration=500)
     await RW.moveForward(0.5, velocityPercentage=10)
     await RW.squareUpOnBlackLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, velocityPercentage=-15, acceleration=500)
@@ -54,6 +55,7 @@ async def runMission7Only() -> None:
 
 async def runMission6_11() -> None:
     #use if Mission 7 (Humongous Fungus) is not to be run
+    motor.run_for_degrees(port.C, 2500, 1110) # lifts motorized attachment out of the way as it is not needed for this
     await RW.moveForwardGyro(stoppingRotations=3.3, velocityPercentage=65)
     await RW.moveStraightUntilLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, lineColor=color.BLACK, velocityPercentage=30)
     await _runMission6(0.64)

@@ -5,10 +5,9 @@ import Combined as RW
 
 async def _runMission7() -> None:
     #Mission 7 (Humongous Fungus)
-
     motor.run_for_degrees(port.C, 500, 1110)
     await RW.moveForwardGyro(3.5, velocityPercentage=60)
-    await motor.run_for_degrees(port.C, 1400, 1110)
+    await motor.run_for_degrees(port.C, 1300, 1110) 
     await RW.moveForwardGyro(0.2, velocityPercentage=40)
     motor.run_for_degrees(port.C, 600, 1110)
     await RW.moveBackwardGyro(stoppingRotations=0.15, velocityPercentage=50)
@@ -19,11 +18,11 @@ async def _runMission6(forwardRotations=0.51) -> None:
     #Mission 6 (Leafcutter Frenzy)
     await RW.moveStraightUntilLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, lineColor=color.BLACK, velocityPercentage=50)
     motor.run_for_degrees(port.C, 600, 1110)
-    await RW.proportionalSpinTurnLeft(degreesToTurn=82, velocityPercentage=20)
+    await RW.proportionalSpinTurnLeft(degreesToTurn=85, velocityPercentage=20) 
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, velocityPercentage=8) #before derivative correction
     #await RW.pidBlackLineFollow(1.4, lightSensorPort=port.F, midPointReflectionPercentage=60, edgeToFollow=RW.BLACK_LINE_LEFT_EDGE, proportionalCorrectionCoef=0.1, derivativeCorrectionCoef=3.0, velocityPercentage=8)
     await RW.moveForwardGyro(1.7, velocityPercentage=50, acceleration=400, brakeStartValue=0.8, correctionMultiplier=-3.5)
-    await RW.proportionalSpinTurnRight(degreesToTurn=110)
+    await RW.proportionalSpinTurnRight(degreesToTurn=120)
     time.sleep(0.25) 
     await RW.squareUpOnBlackLine(leftLightSensorPort=port.E, rightLightSensorPort=port.F, velocityPercentage=15, acceleration=500)
     await RW.moveForward(0.5, velocityPercentage=10)
